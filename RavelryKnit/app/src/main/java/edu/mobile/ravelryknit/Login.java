@@ -1,19 +1,48 @@
 package edu.mobile.ravelryknit;
 
+
+import android.app.Activity;
+import android.content.Context;
 import android.support.v7.app.ActionBarActivity;
 import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
+import android.widget.Button;
+import android.widget.EditText;
+
+import io.oauth.OAuth;
 
 
-public class Login extends ActionBarActivity {
+public class Login extends ActionBarActivity implements View.OnClickListener {
+    private EditText username;
+    private EditText password;
+    private String oauthPublicKey = "oKOmSv14kHK6kUCSIuhRaR1XBPI";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_login);
+        username = (EditText) findViewById(R.id.username);
+        password = (EditText) findViewById(R.id.password);
+        View btnLogin = (Button) findViewById(R.id.submit);
+        btnLogin.setOnClickListener(this);
+        //Oauth setup for login
+        final OAuth oauth = new OAuth(this);
+        oauth.initialize(oauthPublicKey);
+        }
+
+    public void onClick(View v){
+        switch (v.getId()){
+            case R.id.submit:
+                checkLogin();
+                break;
+        }
     }
 
+    private void checkLogin(){
+
+    }
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
