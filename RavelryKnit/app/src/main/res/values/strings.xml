@@ -2,6 +2,10 @@
     <string name="app_name">RavelryKnit</string>
 
     <string name="login_title">Login</string>
-    <string name="submit">Login to Ravelry</string>
+    <string name="user_text">Enter Username</string>
+    <string name="user_name">Username</string>
+    <string name="pass_text">Enter Password</string>
+    <string name="pass_name">Password</string>
+    <string name="submit">Submit</string>
     <string name="action_settings">Settings</string>
 </resources>

@@ -16,13 +16,44 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_centerHorizontal="true"/>
+    <TextView
+        android:id="@+id/userText"
+        android:text="@string/user_name"
+        android:textSize="32sp"
+        android:layout_marginTop="35sp"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_centerHorizontal="true"
+        android:layout_below="@id/login_title"/>
+    <EditText
+        android:id="@+id/username"
+        android:hint="@string/user_text"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/userText"/>
+    <TextView
+        android:id="@+id/passText"
+        android:layout_marginTop="40sp"
+        android:text="@string/pass_name"
+        android:textSize="32sp"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_centerHorizontal="true"
+        android:layout_below="@id/username"/>
+    <EditText
+        android:id="@+id/password"
+        android:inputType="textPassword"
+        android:hint="@string/pass_text"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/passText"/>
     <Button
         android:id="@+id/submit"
         android:layout_marginTop="50sp"
         android:layout_centerHorizontal="true"
-        android:layout_width="160dp"
+        android:layout_width="96dp"
         android:layout_height="wrap_content"
-        android:layout_below="@id/login_title"
+        android:layout_below="@id/password"
         android:text="@string/submit"/>
 
 </RelativeLayout>
