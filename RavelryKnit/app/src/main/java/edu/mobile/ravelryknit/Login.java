@@ -24,9 +24,6 @@ import oauth.signpost.commonshttp.CommonsHttpOAuthProvider;
 
 
 public class Login extends Activity implements View.OnClickListener {
-    private EditText username;
-    private EditText password;
-
     private OAuthConsumer mConsumer = new CommonsHttpOAuthConsumer("B53DF0B7F0AAB1AC65C4", "pYx+Ks/8up8wVVWgov2AsR7HSym89hWbNLclIzrJ");
     private OAuthProvider mProvider = new CommonsHttpOAuthProvider(
             "https://www.ravelry.com/oauth/request_token",
@@ -39,8 +36,6 @@ public class Login extends Activity implements View.OnClickListener {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_login);
-        username = (EditText) findViewById(R.id.username);
-        password = (EditText) findViewById(R.id.password);
         View btnLogin = (Button) findViewById(R.id.submit);
         btnLogin.setOnClickListener(this);
     }
