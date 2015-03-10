@@ -2,7 +2,6 @@ package edu.mobile.ravelryknit;
 
 
 import android.app.Activity;
-import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 import android.view.Menu;
@@ -16,8 +15,6 @@ import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.impl.client.DefaultHttpClient;
-
-import java.net.URLEncoder;
 
 import oauth.signpost.OAuth;
 import oauth.signpost.OAuthConsumer;
