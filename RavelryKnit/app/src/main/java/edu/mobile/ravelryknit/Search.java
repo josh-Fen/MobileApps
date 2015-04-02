@@ -1,17 +1,39 @@
 package edu.mobile.ravelryknit;
 
+import android.content.Intent;
 import android.support.v7.app.ActionBarActivity;
 import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
+import android.widget.Button;
 
 
 public class Search extends ActionBarActivity {
+    /*this button is for Josh to get something sent to display, you
+    *can delete this when you actually program this activity, Tim
+    * */
+    private Button mPlaceHolder;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_search);
+
+        mPlaceHolder = (Button) findViewById(R.id.buttonPlaceHolder); //you can Delete this Tim
+        mPlaceHolder.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                int sendThis = 123456;
+                startDisplay(sendThis);
+            }
+
+        });
+    }
+
+    private void startDisplay(int send) {
+        Intent intent = new Intent(this, Display.class);
+        startActivity(intent);
     }
 
 
