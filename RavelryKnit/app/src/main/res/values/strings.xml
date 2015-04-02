@@ -14,6 +14,10 @@
     <string name="project_picture">Add a picture of your project:</string>
     <string name="project_take_picture">Take Picture</string>
     <string name="project_notes">Notes:</string>
+    <string name="project_yarn">Yarn name:</string>
+    <string name="project_yarn_color">Pick the closest color:</string>
+    <string name="project_yarn_weight">Yarn weight:</string>
+    <string name="project_submit">Submit</string>
 
     <string-array name="craft_array">
         <item>Crochet</item>
@@ -31,6 +35,41 @@
         <item>Based on a stitch from a dictionary, etc</item>
         <item>Not available - this is a heavily modified version of a design</item>
         <item>Not available - I created this design</item>
+    </string-array>
+
+    <string-array name="yarn_color_array">
+        <item>Black</item>
+        <item>Blue</item>
+        <item>Blue-green</item>
+        <item>Blue-purple</item>
+        <item>Brown</item>
+        <item>Grey</item>
+        <item>Green</item>
+        <item>Natural/Undyed</item>
+        <item>Orange</item>
+        <item>Pink</item>
+        <item>Purple</item>
+        <item>Red</item>
+        <item>Red-orange</item>
+        <item>Red-purple</item>
+        <item>White</item>
+        <item>Yellow</item>
+        <item>Yellow-green</item>
+        <item>Yellow-orange</item>
+    </string-array>
+
+    <string-array name="yarn_weight_array">
+        <item>Thread</item>
+        <item>Cobweb / 1 ply</item>
+        <item>Lace / 2 ply</item>
+        <item>Light Fingering / 3 ply</item>
+        <item>Fingering / 4 ply (14 wpi)</item>
+        <item>Sport / 5 ply (12 wpi)</item>
+        <item>DK / 8 ply (11 wpi)</item>
+        <item>Worsted / 10 ply (9 wpi)</item>
+        <item>Aran / 10 ply (8 wpi)</item>
+        <item>Bulky / 12 ply (7 wpi)</item>
+        <item>Super Bulky (5-6 wpi)</item>
     </string-array>
 
 </resources>
