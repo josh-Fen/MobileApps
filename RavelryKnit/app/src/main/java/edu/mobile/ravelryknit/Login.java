@@ -7,6 +7,8 @@ import android.os.Bundle;
 import android.os.StrictMode;
 import android.util.Log;
 import android.view.View;
+import android.webkit.WebView;
+import android.webkit.WebViewClient;
 import android.widget.Button;
 import android.net.Uri;
 
@@ -44,105 +46,161 @@ public class Login extends Activity {
         setContentView(R.layout.activity_login);
         Log.v(TAG, "onCreate");
         if (android.os.Build.VERSION.SDK_INT > 9) {
-            StrictMode.ThreadPolicy policy = new StrictMode.ThreadPolicy.Builder().permitAll().build(); StrictMode.setThreadPolicy(policy);
+            StrictMode.ThreadPolicy policy = new StrictMode.ThreadPolicy.Builder().permitAll().build();
+            StrictMode.setThreadPolicy(policy);
         }
         btnLogin = (Button) findViewById(R.id.submit);
         btnLogin.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
-                switch (v.getId()){
+                switch (v.getId()) {
                     case R.id.submit:
                         mProvider.setOAuth10a(true);
                         String authUrl = "";
                         try {
-                            authUrl = mProvider.retrieveRequestToken(mConsumer, OAuth.OUT_OF_BAND);
+                            authUrl = mProvider.retrieveRequestToken(mConsumer, "http://localhost/oauth_callback");
                         } catch (OAuthMessageSignerException | OAuthNotAuthorizedException | OAuthExpectationFailedException | OAuthCommunicationException ex) {
                             Log.e(TAG, "OAuth Retrieve Request Token Exception", ex);
                         }
-                        startActivity(new Intent("android.intent.action.VIEW", Uri.parse(authUrl)));
+                        WebView webview = new WebView(Login.this);
+                        setContentView(webview);
+                        Log.v(TAG, authUrl);
+                        webview.setWebViewClient(new WebViewClient() {
+
+                            Intent resultIntent = new Intent();
+                            boolean authComplete = false;
+
+                            /* !!!!!!!!!need to make result intent to either try to login again or send to my activity
+                            Intent intent = new Intent(this, DisplayMessageActivity.class);
+                            EditText editText = (EditText) findViewById(R.id.edit_message);
+                            String message = editText.getText().toString();
+                            intent.putExtra(EXTRA_MESSAGE, message);
+                            startActivity(intent);*/
+
+                            @Override
+                            public void onPageFinished(WebView view, String url) {
+                                super.onPageFinished(view, url);
+                                Uri callback = Uri.parse(url);
+                                Log.v(TAG,url);
+                                if (callback.toString().startsWith("http://localhost/oauth_callback") && !authComplete) {
+                                    authComplete = true;
+                                    String oauthVerifier = callback.getQueryParameter("oauth_verifier");
+                                    Log.v(TAG,oauthVerifier);
+                                    try {
+                                        mProvider.retrieveAccessToken(mConsumer,oauthVerifier);
+                                    } catch (OAuthMessageSignerException | OAuthNotAuthorizedException | OAuthExpectationFailedException | OAuthCommunicationException ex) {
+                                        Log.e(TAG, "OAuth Get Access Token Exception", ex);
+                                    }
+                                    OAuthConsumer consumer = new CommonsHttpOAuthConsumer(mConsumer.getConsumerKey(),mConsumer.getConsumerSecret());
+                                    consumer.setTokenWithSecret(mConsumer.getToken(), mConsumer.getTokenSecret());
+
+                                    HttpGet request = new HttpGet("https://api.ravelry.com/current_user.json");
+                                    // sign the request
+                                    try {
+                                        consumer.sign(request);
+                                    } catch (OAuthMessageSignerException | OAuthExpectationFailedException | OAuthCommunicationException ex) {
+                                        Log.e(TAG, "OAuth Sign Exception", ex);
+                                    }
+
+                                    // send the request
+                                    HttpClient httpClient = new DefaultHttpClient();
+                                    try {
+                                        HttpResponse response = httpClient.execute(request);
+                                        byte[] buffer = new byte[(int)response.getEntity().getContentLength()];
+                                        int responseBytes = response.getEntity().getContent().read(buffer);
+                                        int statusCode = response.getStatusLine().getStatusCode();
+                                        Log.v(TAG,Integer.toString(statusCode));
+                                        Log.v(TAG,Integer.toString(responseBytes));
+                                        String decoded = new String(buffer, "UTF-8");
+                                        Log.v(TAG,decoded);
+                                    } catch (IOException ex) {
+                                        Log.e(TAG, "HTTP Client/IO Exception", ex);
+                                    }
+                                }else if(url.contains("401")){
+                                    Log.v(TAG, "Access Denied by Ravelry OAuth");
+                                    authComplete = false;
+                                }
+                            }
+                        });
+                        webview.loadUrl(authUrl);
                         break;
                 }
-            }});
+            }
+        });
     }
 
     @Override
     protected void onResume() {
         super.onResume();
-        // extract the token if it exists
-        Log.v(TAG,"onResume");
-        Uri uri = this.getIntent().getData();
-        if (uri == null) {
-            setContentView(R.layout.activity_login);
-            btnLogin = (Button) findViewById(R.id.submit);
-            btnLogin.setOnClickListener(new View.OnClickListener() {
-                public void onClick(View v) {
-                    switch (v.getId()) {
-                        case R.id.submit:
-                            mProvider.setOAuth10a(true);
-                            String authUrl = "";
-                            try {
-                                authUrl = mProvider.retrieveRequestToken(mConsumer, OAuth.OUT_OF_BAND);
-                            } catch (OAuthMessageSignerException | OAuthNotAuthorizedException | OAuthExpectationFailedException | OAuthCommunicationException ex) {
-                                Log.e(TAG, "OAuth Retrieve Request Token Exception", ex);
+        setContentView(R.layout.activity_login);
+        btnLogin = (Button) findViewById(R.id.submit);
+        btnLogin.setOnClickListener(new View.OnClickListener() {
+            public void onClick(View v) {
+                switch (v.getId()) {
+                    case R.id.submit:
+                        mProvider.setOAuth10a(true);
+                        String authUrl = "";
+                        try {
+                            authUrl = mProvider.retrieveRequestToken(mConsumer, "http://localhost/oauth_callback");
+                        } catch (OAuthMessageSignerException | OAuthNotAuthorizedException | OAuthExpectationFailedException | OAuthCommunicationException ex) {
+                            Log.e(TAG, "OAuth Retrieve Request Token Exception", ex);
+                        }
+                        WebView webview = new WebView(Login.this);
+                        setContentView(webview);
+                        Log.v(TAG, authUrl);
+                        webview.setWebViewClient(new WebViewClient() {
+
+                            Intent resultIntent = new Intent();
+                            boolean authComplete = false;
+
+                            @Override
+                            public void onPageFinished(WebView view, String url) {
+                                super.onPageFinished(view, url);
+                                Uri callback = Uri.parse(url);
+                                Log.v(TAG,url);
+                                if (callback.toString().startsWith("http://localhost/oauth_callback") && !authComplete) {
+                                    authComplete = true;
+                                    String oauthVerifier = callback.getQueryParameter("oauth_verifier");
+                                    Log.v(TAG,oauthVerifier);
+                                    try {
+                                        mProvider.retrieveAccessToken(mConsumer,oauthVerifier);
+                                    } catch (OAuthMessageSignerException | OAuthNotAuthorizedException | OAuthExpectationFailedException | OAuthCommunicationException ex) {
+                                        Log.e(TAG, "OAuth Get Access Token Exception", ex);
+                                    }
+                                    OAuthConsumer consumer = new CommonsHttpOAuthConsumer(mConsumer.getConsumerKey(),mConsumer.getConsumerSecret());
+                                    consumer.setTokenWithSecret(mConsumer.getToken(), mConsumer.getTokenSecret());
+
+                                    HttpGet request = new HttpGet("https://api.ravelry.com/current_user.json");
+                                    // sign the request
+                                    try {
+                                        consumer.sign(request);
+                                    } catch (OAuthMessageSignerException | OAuthExpectationFailedException | OAuthCommunicationException ex) {
+                                        Log.e(TAG, "OAuth Sign Exception", ex);
+                                    }
+
+                                    // send the request
+                                    HttpClient httpClient = new DefaultHttpClient();
+                                    try {
+                                        HttpResponse response = httpClient.execute(request);
+                                        byte[] buffer = new byte[(int)response.getEntity().getContentLength()];
+                                        int responseBytes = response.getEntity().getContent().read(buffer);
+                                        int statusCode = response.getStatusLine().getStatusCode();
+                                        Log.v(TAG,Integer.toString(statusCode));
+                                        Log.v(TAG,Integer.toString(responseBytes));
+                                        String decoded = new String(buffer, "UTF-8");
+                                        Log.v(TAG,decoded);
+                                    } catch (IOException ex) {
+                                        Log.e(TAG, "HTTP Client/IO Exception", ex);
+                                    }
+                                }else if(url.contains("401")){
+                                    Log.v(TAG, "Access Denied by Ravelry OAuth");
+                                    authComplete = false;
+                                }
                             }
-                            startActivity(new Intent("android.intent.action.VIEW", Uri.parse(authUrl)));
-                            break;
+                        });
+                        webview.loadUrl(authUrl);
+                        break;
                     }
                 }
-            });
-        } else {
-            Log.d(TAG, uri.toString());
-            String token = uri.getQueryParameter("oauth_token");
-            String verifier = uri.getQueryParameter("oauth_verifier");
-            try {
-                mProvider.retrieveAccessToken(mConsumer, verifier);
-            } catch (OAuthMessageSignerException | OAuthNotAuthorizedException | OAuthExpectationFailedException | OAuthCommunicationException ex) {
-                Log.e(TAG, "OAuth Get Token Exception", ex);
-            }
-            OAuthConsumer consumer = new CommonsHttpOAuthConsumer(mConsumer.getToken(), mConsumer.getTokenSecret());
-            HttpGet request = new HttpGet("https://api.ravelry.com/current_user.json");
-            // sign the request
-            try {
-                consumer.sign(request);
-            } catch (OAuthMessageSignerException | OAuthExpectationFailedException | OAuthCommunicationException ex) {
-                Log.e(TAG, "OAuth Sign Exception", ex);
-            }
-            // send the request
-            HttpClient httpClient = new DefaultHttpClient();
-            try {
-                HttpResponse response = httpClient.execute(request);
-            } catch (IOException ex) {
-                Log.e(TAG, "HTTP Client/IO Exception", ex);
-            }
-        }
-    }
-
-    @Override
-    protected void onStart() {
-        super.onStart();
-        Log.v(TAG,"onStart");
-    }
-
-    @Override
-    protected void onRestart() {
-        super.onRestart();
-        Log.v(TAG,"onRestart");
-    }
-
-    @Override
-    protected void onPause() {
-        super.onPause();
-        Log.v(TAG,"onPause");
-    }
-
-    @Override
-    protected void onStop() {
-        super.onStop();
-        Log.v(TAG,"onStop");
-    }
-
-    @Override
-    protected void onDestroy() {
-        super.onDestroy();
-        Log.v(TAG,"onDestroy");
+        });
     }
 }
