@@ -19,6 +19,14 @@
     <string name="project_yarn_weight">Yarn weight:</string>
     <string name="project_submit">Submit</string>
 
+    <string name="display_name">Project Name:</string>
+    <string name="display_craft">Craft:</string>
+    <string name="display_pattern_name">Pattern Name:</string>
+    <string name="display_yarn">Yarn:</string>
+    <string name="display_yarn_color">Yarn Color:</string>
+    <string name="display_yarn_weight">Yarn Weight:</string>
+    <string name="display_user">User:</string>
+
     <string-array name="craft_array">
         <item>Crochet</item>
         <item>Knitting</item>
