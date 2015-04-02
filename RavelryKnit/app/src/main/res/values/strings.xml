@@ -71,5 +71,9 @@
         <item>Bulky / 12 ply (7 wpi)</item>
         <item>Super Bulky (5-6 wpi)</item>
     </string-array>
+    <string name="title_activity_search">Search</string>
+
+    <string name="hello_world">Hello world!</string>
+    <string name="title_activity_display">Display</string>
 
 </resources>
