@@ -1,9 +1,11 @@
 package edu.mobile.ravelryknit;
 
+import android.content.Intent;
 import android.support.v7.app.ActionBarActivity;
 import android.support.v7.app.ActionBar;
 import android.support.v4.app.Fragment;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -11,8 +13,25 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.os.Build;
 
+import org.apache.http.HttpResponse;
+import org.apache.http.client.HttpClient;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.impl.client.DefaultHttpClient;
+
+import java.io.IOException;
+import java.io.Serializable;
+import java.io.UnsupportedEncodingException;
+
+import oauth.signpost.OAuthConsumer;
+import oauth.signpost.exception.OAuthCommunicationException;
+import oauth.signpost.exception.OAuthExpectationFailedException;
+import oauth.signpost.exception.OAuthMessageSignerException;
+
 
 public class Main extends ActionBarActivity {
+    private static final String TAG = "Main";
+    private OAuthConsumer consumer;
+    private String currentUser;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -23,6 +42,9 @@ public class Main extends ActionBarActivity {
                     .add(R.id.container, new PlaceholderFragment())
                     .commit();
         }
+        Intent incomingIntent = getIntent();
+        consumer = (OAuthConsumer) incomingIntent.getSerializableExtra("Consumer");
+        currentUser = incomingIntent.getStringExtra("CurrentUser");
     }
 
 
@@ -42,6 +64,14 @@ public class Main extends ActionBarActivity {
 
         //noinspection SimplifiableIfStatement
         if (id == R.id.action_settings) {
+            return true;
+        }
+
+        if (id == R.id.action_submit) {
+            Intent launchSubmit = new Intent(Main.this, Submit.class);
+            launchSubmit.putExtra("Consumer", consumer);
+            launchSubmit.putExtra("CurrentUser", (Serializable) currentUser);
+            startActivity(launchSubmit);
             return true;
         }
 

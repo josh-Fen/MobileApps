@@ -22,6 +22,8 @@ import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.params.HttpParams;
+import org.json.JSONException;
+import org.json.JSONObject;
 
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
@@ -71,7 +73,6 @@ public class Login extends Activity {
                         }
                         WebView webview = new WebView(Login.this);
                         setContentView(webview);
-                        Log.v(TAG, authUrl);
                         webview.setWebViewClient(new WebViewClient() {
 
                             boolean authComplete = false;
@@ -122,9 +123,9 @@ public class Login extends Activity {
                                     } catch (UnsupportedEncodingException ex) {
                                         Log.e(TAG, "UnsupportedEncodingException on buffer", ex);
                                     }
-                                    Log.v(TAG, decoded);
-                                    Log.v(TAG, "Got Here!?!");
                                     Intent launchMain = new Intent(Login.this, Main.class);
+                                    launchMain.putExtra("Consumer", consumer);
+                                    launchMain.putExtra("CurrentUser", decoded);
                                     startActivity(launchMain);
                                 } else if (url.contains("401")) {
                                     Log.v(TAG, "Access Denied by Ravelry OAuth");
@@ -158,7 +159,6 @@ public class Login extends Activity {
                         }
                         WebView webview = new WebView(Login.this);
                         setContentView(webview);
-                        Log.v(TAG, authUrl);
                         webview.setWebViewClient(new WebViewClient() {
 
                             boolean authComplete = false;
@@ -167,11 +167,9 @@ public class Login extends Activity {
                             public void onPageFinished(WebView view, String url) {
                                 super.onPageFinished(view, url);
                                 Uri callback = Uri.parse(url);
-                                Log.v(TAG,url);
                                 if (callback.toString().startsWith("http://localhost/oauth_callback") && !authComplete) {
                                     authComplete = true;
                                     String oauthVerifier = callback.getQueryParameter("oauth_verifier");
-                                    Log.v(TAG,oauthVerifier);
                                     try {
                                         mProvider.retrieveAccessToken(mConsumer,oauthVerifier);
                                     } catch (OAuthMessageSignerException | OAuthNotAuthorizedException | OAuthExpectationFailedException | OAuthCommunicationException ex) {
@@ -211,9 +209,9 @@ public class Login extends Activity {
                                     } catch (UnsupportedEncodingException ex) {
                                         Log.e(TAG, "UnsupportedEncodingException on buffer", ex);
                                     }
-                                    Log.v(TAG, decoded);
-                                    Log.v(TAG, "Got Here!?!");
                                     Intent launchMain = new Intent(Login.this, Main.class);
+                                    launchMain.putExtra("Consumer", consumer);
+                                    launchMain.putExtra("CurrentUser", decoded);
                                     startActivity(launchMain);
                                 } else if (url.contains("401")) {
                                     Log.v(TAG, "Access Denied by Ravelry OAuth");
