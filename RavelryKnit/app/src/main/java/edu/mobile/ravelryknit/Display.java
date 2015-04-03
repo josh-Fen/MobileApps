@@ -5,6 +5,21 @@ import android.support.v7.app.ActionBarActivity;
 import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.widget.TextView;
+
+import org.apache.http.HttpResponse;
+import org.apache.http.client.HttpClient;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.impl.client.DefaultHttpClient;
+import org.json.JSONException;
+import org.json.JSONObject;
+import java.io.File;
+import java.io.IOException;
+import java.net.URI;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+
+
 
 import oauth.signpost.OAuthConsumer;
 import oauth.signpost.OAuthProvider;
@@ -19,6 +34,18 @@ public class Display extends ActionBarActivity {
             "https://www.ravelry.com/oauth/access_token",
             "https://www.ravelry.com/oauth/authorize");
 
+    private TextView user;
+    private TextView projectName;
+    private TextView craft;
+    private TextView patternName;
+    private TextView yarn;
+    private TextView yarnColor;
+    private TextView yarnWeight;
+
+    private HttpClient client;
+
+
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -26,6 +53,9 @@ public class Display extends ActionBarActivity {
 
         Intent intent = getIntent();
         int projectID = intent.getIntExtra(Search.EXTRA_INT, (int)-1); //getting projectID or -1 if error
+
+        
+
     }
 
 

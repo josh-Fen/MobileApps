@@ -23,5 +23,6 @@ dependencies {
     compile 'com.android.support:appcompat-v7:21.0.3'
     compile 'oauth.signpost:signpost-core:1.2.1.2'
     compile 'oauth.signpost:signpost-commonshttp4:1.2.1.2'
+    compile group: 'org.apache.httpcomponents' , name: 'httpclient-android' , version: '4.3.5.1'
 }
 
