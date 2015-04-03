@@ -32,5 +32,7 @@
         <item>Not available - this is a heavily modified version of a design</item>
         <item>Not available - I created this design</item>
     </string-array>
+    <string name="title_activity_main">Main</string>
+    <string name="hello_world">Hello world!</string>
 
 </resources>
