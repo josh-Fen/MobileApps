@@ -29,6 +29,7 @@
     <string name="display_user">User:</string>
 
     <string-array name="craft_array">
+        <item></item>
         <item>Crochet</item>
         <item>Knitting</item>
         <item>Loom Knitting</item>
@@ -38,6 +39,7 @@
     </string-array>
 
     <string-array name="pattern_source_array">
+        <item></item>
         <item>Book or magazine</item>
         <item>Website or download</item>
         <item>Handout, pamphlet or sheet</item>
@@ -49,6 +51,7 @@
     <string name="hello_world">Hello world!</string>
 
     <string-array name="yarn_color_array">
+        <item></item>
         <item>Black</item>
         <item>Blue</item>
         <item>Blue-green</item>
@@ -70,6 +73,7 @@
     </string-array>
 
     <string-array name="yarn_weight_array">
+        <item></item>
         <item>Thread</item>
         <item>Cobweb / 1 ply</item>
         <item>Lace / 2 ply</item>

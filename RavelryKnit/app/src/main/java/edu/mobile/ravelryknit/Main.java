@@ -84,7 +84,7 @@ public class Main extends ActionBarActivity {
         Log.v(TAG,decoded);
 
         GridView gridview = (GridView) findViewById(R.id.gridView);
-        gridview.setAdapter(new ImageAdapter(this));
+        //gridview.setAdapter(new ImageAdapter(this));
     }
 
     public class ImageAdapter extends BaseAdapter {

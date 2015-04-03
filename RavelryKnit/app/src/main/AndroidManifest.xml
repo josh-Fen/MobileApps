@@ -40,6 +40,8 @@
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="edu.mobile.ravelryknit.Main" />
         </activity>
+        <activity android:name=".Submit"
+            android:label="Submit"/>
     </application>
 
 </manifest>
