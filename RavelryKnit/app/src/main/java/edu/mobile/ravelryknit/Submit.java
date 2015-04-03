@@ -1,9 +1,12 @@
 package edu.mobile.ravelryknit;
 
 import android.app.Activity;
+import android.content.Intent;
+import android.net.Uri;
 import android.os.Bundle;
+import android.os.Environment;
 import android.os.StrictMode;
-import android.support.v7.internal.widget.AdapterViewCompat;
+import android.provider.MediaStore;
 import android.util.Log;
 import android.view.View;
 import android.widget.AdapterView;
@@ -14,11 +17,61 @@ import android.widget.Spinner;
 import android.widget.AdapterView.OnItemSelectedListener;
 import android.view.View.OnClickListener;
 
+import org.apache.http.HttpResponse;
+import org.apache.http.client.HttpClient;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.impl.client.DefaultHttpClient;
+import org.json.JSONException;
+import org.json.JSONObject;
+import java.io.File;
+import java.io.IOException;
+import java.net.URI;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+
+import oauth.signpost.OAuthConsumer;
+import oauth.signpost.OAuthProvider;
+import oauth.signpost.commonshttp.CommonsHttpOAuthConsumer;
+import oauth.signpost.commonshttp.CommonsHttpOAuthProvider;
+import oauth.signpost.exception.OAuthCommunicationException;
+import oauth.signpost.exception.OAuthExpectationFailedException;
+import oauth.signpost.exception.OAuthMessageSignerException;
+
 /**
  * Created by Kaitlyn on 3/31/2015.
  */
 public class Submit extends Activity implements OnItemSelectedListener, OnClickListener {
     private static final String TAG = "Submit";
+    static final int REQUEST_IMAGE_CAPTURE = 1;
+    private OAuthConsumer mConsumer = new CommonsHttpOAuthConsumer("B53DF0B7F0AAB1AC65C4", "pYx+Ks/8up8wVVWgov2AsR7HSym89hWbNLclIzrJ");
+    private OAuthProvider mProvider = new CommonsHttpOAuthProvider(
+            "https://www.ravelry.com/oauth/request_token",
+            "https://www.ravelry.com/oauth/access_token",
+            "https://www.ravelry.com/oauth/authorize");
+
+    /*private String username;
+    private String projectName;
+
+
+    private String patternName;
+    private String patternSourceName;
+    private String photoUri;
+
+    private String notes;
+    private String yarnName;
+    ;*/
+
+    private Uri pictureUri;
+
+    private String projectCraft = "";
+    private String yarnColor = "";
+    private String yarnWeight = "";
+
+
+    private EditText projectName;
+    private EditText projectPatternName;
+    private EditText projectNotes;
+    private EditText projectYarn;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -30,8 +83,8 @@ public class Submit extends Activity implements OnItemSelectedListener, OnClickL
             StrictMode.setThreadPolicy(policy);
         }
 
-        //Project Name
-        EditText projectName = (EditText) findViewById(R.id.project_name);
+        //Project Name -- can't be blank
+        projectName = (EditText) findViewById(R.id.project_name);
 
         //Craft Choices
         Spinner projectCraft = (Spinner) findViewById(R.id.project_craft);
@@ -44,41 +97,206 @@ public class Submit extends Activity implements OnItemSelectedListener, OnClickL
         projectCraft.setAdapter(craftAdapter);
         projectCraft.setOnItemSelectedListener(this);
 
-        //Pattern Location Choices
-        Spinner projectPatternSource = (Spinner) findViewById(R.id.project_pattern_source);
-        // Create an ArrayAdapter using the string array and a default spinner layout
-        ArrayAdapter<CharSequence> locationAdapter = ArrayAdapter.createFromResource(this,
-                R.array.pattern_source_array, android.R.layout.simple_spinner_item);
-        // Specify the layout to use when the list of choices appears
-        locationAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-        // Apply the adapter to the spinner
-        projectCraft.setAdapter(locationAdapter);
-        projectCraft.setOnItemSelectedListener(this);
-
-        //Pattern Name
-        EditText projectPatternName = (EditText) findViewById(R.id.project_pattern_name);
-
-        //Pattern Source Name
-        EditText projectPatternSourceName = (EditText) findViewById(R.id.project_pattern_source_name);
+        //Pattern Name -- can't be blank
+        projectPatternName = (EditText) findViewById(R.id.project_pattern_name);
 
         //Picture
         Button takePicture = (Button) findViewById(R.id.project_picture);
+        takePicture.setOnClickListener(this);
 
         //Notes
-        EditText projectNotes = (EditText) findViewById(R.id.project_notes);
+        projectNotes = (EditText) findViewById(R.id.project_notes);
+
+        //Yarn Name
+        projectYarn = (EditText) findViewById(R.id.project_yarn);
+
+        //Yarn Color
+        Spinner projectYarnColor = (Spinner) findViewById(R.id.project_yarn_color);
+        // Create an ArrayAdapter using the string array and a default spinner layout
+        ArrayAdapter<CharSequence> colorAdapter = ArrayAdapter.createFromResource(this,
+                R.array.yarn_color_array, android.R.layout.simple_spinner_item);
+        // Specify the layout to use when the list of choices appears
+        colorAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        // Apply the adapter to the spinner
+        projectYarnColor.setAdapter(colorAdapter);
+        projectYarnColor.setOnItemSelectedListener(this);
+
+        //Yarn Weight
+        Spinner projectYarnWeight = (Spinner) findViewById(R.id.project_yarn_weight);
+        // Create an ArrayAdapter using the string array and a default spinner layout
+        ArrayAdapter<CharSequence> weightAdapter = ArrayAdapter.createFromResource(this,
+                R.array.yarn_weight_array, android.R.layout.simple_spinner_item);
+        // Specify the layout to use when the list of choices appears
+        weightAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        // Apply the adapter to the spinner
+        projectYarnWeight.setAdapter(weightAdapter);
+        projectYarnWeight.setOnItemSelectedListener(this);
+
+        //Submit
+        Button submitButton = (Button) findViewById(R.id.project_submit);
+        submitButton.setOnClickListener(this);
     }
 
     public void onClick(View v){
+        switch (v.getId()){
+            case R.id.project_picture:
+                takePicture();
+            case R.id.project_submit:
+                boolean complete = validateSubmission();
+                if(complete) {
+                    submitProject();
+                } else{
+                    //TODO:idk popup maybe?
+                }
+        }
 
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        //when an image is captured, get its uri
+        if (requestCode == REQUEST_IMAGE_CAPTURE && resultCode == RESULT_OK) {
+            Bundle extras = data.getExtras();
+            pictureUri = (Uri) extras.get(MediaStore.EXTRA_OUTPUT);
+        }
     }
 
     public void onItemSelected(AdapterView<?> parent, View view, int pos, long id) {
-        // An item was selected. You can retrieve the selected item using
-        // parent.getItemAtPosition(pos)
+        // An item was selected in a spinner
+        switch (parent.getId()){
+            case R.id.project_craft:
+                projectCraft = (String) parent.getItemAtPosition(pos);
+            case R.id.project_yarn_color:
+                yarnColor = (String) parent.getItemAtPosition(pos);
+            case R.id.project_yarn_weight:
+                yarnWeight = (String) parent.getItemAtPosition(pos);
+        }
     }
 
     public void onNothingSelected(AdapterView<?> parent) {
-        // Another interface callback
+        // Another interface callback -- I think blank is ok??
     }
 
+    public void takePicture(){
+        Intent takePictureIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+        // Ensure that there's a camera activity to handle the intent
+        if (takePictureIntent.resolveActivity(getPackageManager()) != null) {
+            // Create the File where the photo should go
+            File photoFile = null;
+            try {
+                photoFile = createImageFile();
+            } catch (IOException ex) {
+                // Error occurred while creating the File
+                //TODO:fill in
+            }
+            // Continue only if the File was successfully created
+            if (photoFile != null) {
+                takePictureIntent.putExtra(MediaStore.EXTRA_OUTPUT,
+                        Uri.fromFile(photoFile));
+                startActivityForResult(takePictureIntent, REQUEST_IMAGE_CAPTURE);
+            }
+        }
+    }
+
+    public boolean validateSubmission(){
+        String projectNameString = projectName.getText().toString();
+        String patternNameString = projectPatternName.getText().toString();
+        //valid if project name and pattern name are filled in
+        return !(projectNameString.equals("") || patternNameString.equals(""));
+    }
+
+    public void submitProject(){
+        JSONObject projectObject = new JSONObject();
+        JSONObject yarnObject = new JSONObject();
+
+        //get values from EditText boxes
+        String yarnNameString = projectYarn.getText().toString();
+        String patternNameString = projectPatternName.getText().toString();
+        String projectNameString = projectName.getText().toString();
+        String projectNotesString = projectNotes.getText().toString();
+
+        //Make yarn JSON Object
+        try {
+            if(!yarnColor.equals("")){
+                //get yarn color array-- GET /color_families.json
+                //has color 1st, then id
+                //find yarn color id from array
+                yarnObject.put("color_family_id", "idAsString");
+            }
+            if(!yarnNameString.equals("")){
+                yarnObject.put("personal_name", yarnNameString);
+            }
+            if(!yarnWeight.equals("")){
+                //get yarn weight array -- GET /yarn_weights.json
+                //has id, name, ply, wpi
+                yarnObject.put("personal_yarn_weight_id", "id-as-int");
+            }
+
+        } catch (JSONException e){
+            //TODO:fill in--log
+        }
+
+        //Make project JSON Object
+        try {
+            //Project Name
+            projectObject.put("name", projectNameString);
+
+            //Craft
+            if(!projectCraft.equals("")){
+                //get craft array -- POST /projects/crafts.json
+                //find craft id from array - has id, name
+                projectObject.put("craft_id", "idAsInt");
+            }
+
+            //Notes
+            if(!projectNotesString.equals("")){
+                projectObject.put("notes", projectNotesString);
+            }
+
+            //Pattern Name
+            projectObject.put("personal_pattern_name", patternNameString);
+
+            //Yarn
+            projectObject.put("packs", yarnObject);
+
+        } catch (JSONException e) {
+            //TODO:fill in
+        }
+
+        //TODO: this does stuff with OAuth to send the request.. gets the user but like uh how?
+        OAuthConsumer consumer = new CommonsHttpOAuthConsumer(mConsumer.getToken(), mConsumer.getTokenSecret());
+        HttpGet request = new HttpGet("https://api.ravelry.com/current_user.json");
+        // sign the request
+        try {
+            consumer.sign(request);
+        } catch (OAuthMessageSignerException | OAuthExpectationFailedException | OAuthCommunicationException ex) {
+            Log.e(TAG, "OAuth Sign Exception", ex);
+        }
+        // send the request
+        HttpClient httpClient = new DefaultHttpClient();
+        try {
+            HttpResponse response = httpClient.execute(request);
+        } catch (IOException ex) {
+            Log.e(TAG, "HTTP Client/IO Exception", ex);
+        }
+
+        //add photo
+    }
+
+    private File createImageFile() throws IOException {
+        // Create an image file name
+        String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
+        String imageFileName = "JPEG_" + timeStamp + "_";
+        File storageDir = Environment.getExternalStoragePublicDirectory(
+                Environment.DIRECTORY_PICTURES);
+        File image = File.createTempFile(
+                imageFileName,  /* prefix */
+                ".jpg",         /* suffix */
+                storageDir      /* directory */
+        );
+
+        // Save a file: path for use with ACTION_VIEW intents
+        //photoUri = "file:" + image.getAbsolutePath();
+        return image;
+    }
 }
