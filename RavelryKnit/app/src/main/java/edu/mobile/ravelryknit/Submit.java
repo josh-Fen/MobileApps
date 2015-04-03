@@ -16,18 +16,31 @@ import android.widget.EditText;
 import android.widget.Spinner;
 import android.widget.AdapterView.OnItemSelectedListener;
 import android.view.View.OnClickListener;
+import android.widget.Toast;
 
+import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
+import org.apache.http.NameValuePair;
 import org.apache.http.client.HttpClient;
+import org.apache.http.client.entity.UrlEncodedFormEntity;
 import org.apache.http.client.methods.HttpGet;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.entity.ContentType;
+import org.apache.http.entity.mime.MultipartEntityBuilder;
 import org.apache.http.impl.client.DefaultHttpClient;
+import org.apache.http.message.BasicNameValuePair;
+import org.apache.http.params.HttpParams;
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 import java.io.File;
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
 import java.net.URI;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 
 import oauth.signpost.OAuthConsumer;
 import oauth.signpost.OAuthProvider;
@@ -49,29 +62,21 @@ public class Submit extends Activity implements OnItemSelectedListener, OnClickL
             "https://www.ravelry.com/oauth/access_token",
             "https://www.ravelry.com/oauth/authorize");
 
-    /*private String username;
-    private String projectName;
-
-
-    private String patternName;
-    private String patternSourceName;
-    private String photoUri;
-
-    private String notes;
-    private String yarnName;
-    ;*/
-
-    private Uri pictureUri;
+    private OAuthConsumer consumer = new CommonsHttpOAuthConsumer(mConsumer.getToken(), mConsumer.getTokenSecret());
+    private String apiAccessKey;
+    private String urlBase = "https://api.ravelry.com";
+    private String username;
 
     private String projectCraft = "";
     private String yarnColor = "";
     private String yarnWeight = "";
 
-
     private EditText projectName;
     private EditText projectPatternName;
     private EditText projectNotes;
     private EditText projectYarn;
+
+    private File picture;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -146,10 +151,9 @@ public class Submit extends Activity implements OnItemSelectedListener, OnClickL
                 if(complete) {
                     submitProject();
                 } else{
-                    //TODO:idk popup maybe?
+                    Toast.makeText(getApplicationContext(), R.string.fix_submit, Toast.LENGTH_SHORT).show();
                 }
         }
-
     }
 
     @Override
@@ -157,7 +161,7 @@ public class Submit extends Activity implements OnItemSelectedListener, OnClickL
         //when an image is captured, get its uri
         if (requestCode == REQUEST_IMAGE_CAPTURE && resultCode == RESULT_OK) {
             Bundle extras = data.getExtras();
-            pictureUri = (Uri) extras.get(MediaStore.EXTRA_OUTPUT);
+            Uri pictureUri = (Uri) extras.get(MediaStore.EXTRA_OUTPUT);
         }
     }
 
@@ -186,8 +190,7 @@ public class Submit extends Activity implements OnItemSelectedListener, OnClickL
             try {
                 photoFile = createImageFile();
             } catch (IOException ex) {
-                // Error occurred while creating the File
-                //TODO:fill in
+                Log.e(TAG, "IO Exception while creating image file", ex);
             }
             // Continue only if the File was successfully created
             if (photoFile != null) {
@@ -219,7 +222,12 @@ public class Submit extends Activity implements OnItemSelectedListener, OnClickL
         try {
             if(!yarnColor.equals("")){
                 //get yarn color array-- GET /color_families.json
-                //has color 1st, then id
+                HttpGet yarnColorGet = new HttpGet(urlBase + "/color_families.json");
+                HttpResponse yarnColorResponse = sendGet(yarnColorGet);
+                JSONArray yarnColorObject = (JSONArray) yarnColorResponse.getParams().getParameter("color_families");
+                //TODO:remove later
+                Log.v(TAG, yarnColorObject.toString());
+                //has color, id
                 //find yarn color id from array
                 yarnObject.put("color_family_id", "idAsString");
             }
@@ -228,12 +236,16 @@ public class Submit extends Activity implements OnItemSelectedListener, OnClickL
             }
             if(!yarnWeight.equals("")){
                 //get yarn weight array -- GET /yarn_weights.json
+                HttpGet yarnWeightGet = new HttpGet(urlBase + "/yarn_weights.json");
+                HttpResponse yarnWeightResponse = sendGet(yarnWeightGet);
+                JSONArray yarnWeightObject = (JSONArray) yarnWeightResponse.getParams().getParameter("yarn_weights");
+                //TODO:remove later
+                Log.v(TAG, yarnWeightObject.toString());
                 //has id, name, ply, wpi
                 yarnObject.put("personal_yarn_weight_id", "id-as-int");
             }
-
         } catch (JSONException e){
-            //TODO:fill in--log
+            Log.e(TAG, "JSON Exception at creating yarn object", e);
         }
 
         //Make project JSON Object
@@ -244,6 +256,11 @@ public class Submit extends Activity implements OnItemSelectedListener, OnClickL
             //Craft
             if(!projectCraft.equals("")){
                 //get craft array -- POST /projects/crafts.json
+                HttpPost craftArrayPost = new HttpPost(urlBase + "/projects/crafts.json");
+                HttpResponse craftArrayResponse = sendPost(craftArrayPost);
+                JSONArray craftArrayObject = (JSONArray) craftArrayResponse.getParams().getParameter("crafts");
+                //TODO:remove later
+                Log.v(TAG, craftArrayObject.toString());
                 //find craft id from array - has id, name
                 projectObject.put("craft_id", "idAsInt");
             }
@@ -260,12 +277,75 @@ public class Submit extends Activity implements OnItemSelectedListener, OnClickL
             projectObject.put("packs", yarnObject);
 
         } catch (JSONException e) {
-            //TODO:fill in
+            Log.e(TAG, "JSON Exception while creating project object", e);
         }
 
-        //TODO: this does stuff with OAuth to send the request.. gets the user but like uh how?
-        OAuthConsumer consumer = new CommonsHttpOAuthConsumer(mConsumer.getToken(), mConsumer.getTokenSecret());
-        HttpGet request = new HttpGet("https://api.ravelry.com/current_user.json");
+        //Submit the project
+        HttpPost projectPost = new HttpPost(urlBase + "/projects/" + username + "/create.json");
+        //add params to the post
+        List<NameValuePair> projectParams = new ArrayList<NameValuePair>();
+        projectParams.add(new BasicNameValuePair("id", "12345"));
+        try {
+            projectPost.setEntity(new UrlEncodedFormEntity(projectParams));
+        } catch (UnsupportedEncodingException e) {
+            Log.e(TAG, "Encoding Error with project post", e);
+        }
+        HttpResponse projectResponse = sendPost(projectPost);
+        JSONObject completedProjectObject = (JSONObject) projectResponse.getParams().getParameter("project");
+        //Get the project ID from the object in the response
+        int projectId = 0;
+        try {
+            projectId = completedProjectObject.getInt("id");
+        } catch (JSONException e) {
+            Log.e(TAG, "JSON Exception at get project ID", e);
+        }
+
+        //add photo
+
+        //Get upload Token
+        HttpPost requestTokenPost = new HttpPost(urlBase + "/upload/request_token.json");
+        HttpResponse requestTokenResponse = sendPost(requestTokenPost);
+        String uploadToken = (String) requestTokenResponse.getParams().getParameter("upload_token");
+
+        //Upload the image
+        HttpPost uploadImagePost = new HttpPost(urlBase + "/upload/image.json");
+        //create the multipart image
+        MultipartEntityBuilder builder = MultipartEntityBuilder.create();
+        builder.addBinaryBody("file0", picture, ContentType.create("image/jpeg"), picture.getName());
+        HttpEntity multipart = builder.build(); //THIS IS AN ENTITY
+        //add params to the post
+        List<NameValuePair> uploadImageParams = new ArrayList<NameValuePair>();
+        uploadImageParams.add(new BasicNameValuePair("upload_token", uploadToken));//CANT ADD OTHER PARAMS TO IT? I THINK
+        uploadImageParams.add(new BasicNameValuePair("access_key", apiAccessKey));
+        uploadImageParams.add(new BasicNameValuePair("file0", "multipart.tostring???"));//CANT ADD IT TO PARAMS HERE
+        try {
+            uploadImagePost.setEntity(new UrlEncodedFormEntity(uploadImageParams));//PRETTY SURE YOU CANT HAVE TWO ENTITIES SET EITHER
+        } catch (UnsupportedEncodingException e) {
+            Log.e(TAG, "Encoding Error with upload image post", e);
+        }
+        HttpResponse uploadImageResponse = sendPost(projectPost);
+        //TODO:fix this
+        JSONObject uploadImageResponseObject = (JSONObject) uploadImageResponse.getParams().getParameter("uploads");
+        int imageId = 0;
+        try {
+            imageId = uploadImageResponseObject.getInt("image_id");
+        } catch (JSONException e) {
+            Log.e(TAG, "JSON Exception with image ID", e);
+        }
+
+        //Add the picture to the project
+        HttpPost picturePost = new HttpPost(urlBase + "/projects/" + username + "/" + projectId + "/create_photo.json");
+        List<NameValuePair> pictureParams = new ArrayList<NameValuePair>();
+        pictureParams.add(new BasicNameValuePair("image_id", Integer.toString(imageId)));
+        try {
+            picturePost.setEntity(new UrlEncodedFormEntity(pictureParams));
+        } catch (UnsupportedEncodingException e) {
+            Log.e(TAG, "Encoding Error with picture post", e);
+        }
+        sendPost(picturePost);
+    }
+
+    private HttpResponse sendPost(HttpPost request){
         // sign the request
         try {
             consumer.sign(request);
@@ -274,13 +354,31 @@ public class Submit extends Activity implements OnItemSelectedListener, OnClickL
         }
         // send the request
         HttpClient httpClient = new DefaultHttpClient();
+        HttpResponse response = null;
         try {
-            HttpResponse response = httpClient.execute(request);
+            response = httpClient.execute(request);
         } catch (IOException ex) {
             Log.e(TAG, "HTTP Client/IO Exception", ex);
         }
+        return response;
+    }
 
-        //add photo
+    private HttpResponse sendGet(HttpGet request){
+        // sign the request
+        try {
+            consumer.sign(request);
+        } catch (OAuthMessageSignerException | OAuthExpectationFailedException | OAuthCommunicationException ex) {
+            Log.e(TAG, "OAuth Sign Exception", ex);
+        }
+        // send the request
+        HttpClient httpClient = new DefaultHttpClient();
+        HttpResponse response = null;
+        try {
+            response = httpClient.execute(request);
+        } catch (IOException ex) {
+            Log.e(TAG, "HTTP Client/IO Exception", ex);
+        }
+        return response;
     }
 
     private File createImageFile() throws IOException {
@@ -294,6 +392,8 @@ public class Submit extends Activity implements OnItemSelectedListener, OnClickL
                 ".jpg",         /* suffix */
                 storageDir      /* directory */
         );
+
+        picture = image;
 
         // Save a file: path for use with ACTION_VIEW intents
         //photoUri = "file:" + image.getAbsolutePath();

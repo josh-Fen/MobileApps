@@ -18,13 +18,14 @@
     <string name="project_yarn_color">Pick the closest color:</string>
     <string name="project_yarn_weight">Yarn weight:</string>
     <string name="project_submit">Submit</string>
+    <string name="fix_submit">The fields \'Project Name\' and \'Name of pattern\' cannot be blank</string>
 
     <string name="display_name">Project Name:</string>
     <string name="display_craft">Craft:</string>
     <string name="display_pattern_name">Pattern Name:</string>
     <string name="display_yarn">Yarn:</string>
-    <string name="display_yarn_color">Yarn Color:</string>
-    <string name="display_yarn_weight">Yarn Weight:</string>
+    <string name="display_created">Created:</string>
+    <string name="display_completed">Completed:</string>
     <string name="display_user">User:</string>
 
     <string-array name="craft_array">
