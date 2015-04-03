@@ -23,8 +23,8 @@
     <string name="display_craft">Craft:</string>
     <string name="display_pattern_name">Pattern Name:</string>
     <string name="display_yarn">Yarn:</string>
-    <string name="display_yarn_color">Yarn Color:</string>
-    <string name="display_yarn_weight">Yarn Weight:</string>
+    <string name="display_created">Created:</string>
+    <string name="display_completed">Completed:</string>
     <string name="display_user">User:</string>
 
     <string-array name="craft_array">

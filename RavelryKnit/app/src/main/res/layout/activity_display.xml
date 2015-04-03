@@ -114,7 +114,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:textAppearance="?android:attr/textAppearanceMedium"
-        android:text="@string/display_yarn_color"
+        android:text="@string/display_created"
         android:id="@+id/textView11"
         android:layout_below="@+id/textView9"
         android:layout_alignParentLeft="true"
@@ -125,7 +125,7 @@
         android:layout_height="wrap_content"
         android:textAppearance="?android:attr/textAppearanceMedium"
         android:text="Medium Text"
-        android:id="@+id/displayYarnColorView"
+        android:id="@+id/displayCreatedView"
         android:layout_below="@+id/displayYarnView"
         android:layout_alignParentRight="true"
         android:layout_alignParentEnd="true" />
@@ -134,7 +134,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:textAppearance="?android:attr/textAppearanceMedium"
-        android:text="@string/display_yarn_weight"
+        android:text="@string/display_completed"
         android:id="@+id/textView13"
         android:layout_below="@+id/textView11"
         android:layout_alignParentLeft="true"
@@ -145,8 +145,8 @@
         android:layout_height="wrap_content"
         android:textAppearance="?android:attr/textAppearanceMedium"
         android:text="Medium Text"
-        android:id="@+id/displayYarnWeightView"
-        android:layout_below="@+id/displayYarnColorView"
+        android:id="@+id/displayCompletedView"
+        android:layout_below="@+id/displayCreatedView"
         android:layout_alignParentRight="true"
         android:layout_alignParentEnd="true" />
 

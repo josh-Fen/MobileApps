@@ -7,19 +7,13 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.TextView;
 
-import org.apache.http.HttpResponse;
-import org.apache.http.client.HttpClient;
-import org.apache.http.client.methods.HttpGet;
-import org.apache.http.impl.client.DefaultHttpClient;
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
-import java.io.File;
-import java.io.IOException;
-import java.net.URI;
+
+import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
-
-
 
 import oauth.signpost.OAuthConsumer;
 import oauth.signpost.OAuthProvider;
@@ -39,10 +33,20 @@ public class Display extends ActionBarActivity {
     private TextView craft;
     private TextView patternName;
     private TextView yarn;
-    private TextView yarnColor;
-    private TextView yarnWeight;
+    private TextView created;
+    private TextView completed;
 
-    private HttpClient client;
+    private String username = "None";
+    private String name = "None";
+    private String craftString = "None";
+    private String patternString = "None";
+    private String yarnString = "None";
+    private Date createdDate;
+    private boolean finished = false;
+    private String unFinished = "Not Finished Yet";
+    private Date completedDate;
+
+    JSONObject jsonObj;
 
 
 
@@ -52,9 +56,88 @@ public class Display extends ActionBarActivity {
         setContentView(R.layout.activity_display);
 
         Intent intent = getIntent();
-        int projectID = intent.getIntExtra(Search.EXTRA_INT, (int)-1); //getting projectID or -1 if error
+        try {
+            jsonObj = new JSONObject(intent.getStringExtra("product"));
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
 
-        
+        //getting username
+        try {
+            JSONObject userObject = jsonObj.getJSONObject("user");
+            username = userObject.getString("username");
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+        user.setText(username);
+
+        //getting project name
+        try {
+            name = jsonObj.getString("name");
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+        projectName.setText(name);
+
+        //getting craft
+        try {
+            craftString = jsonObj.getString("craft_name");
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+        craft.setText(craftString);
+
+        //getting pattern name
+        try {
+            patternString = jsonObj.getString("pattern_name");
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+        patternName.setText(patternString);
+
+        //getting yarn
+        try {
+            JSONArray packsObject = jsonObj.getJSONArray("packs");
+            JSONObject yarnObject = packsObject.getJSONObject(0);
+            yarnString = yarnObject.getString("yarn_name");
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+        yarn.setText(yarnString);
+
+        //getting created date
+        try {
+            String createdDateString = jsonObj.getString("created_at");
+            SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+            createdDate = sdf.parse(createdDateString);
+        } catch (JSONException e) {
+            e.printStackTrace();
+        } catch (ParseException e) {
+            e.printStackTrace();
+        }
+        created.setText((CharSequence) createdDate);
+
+        //getting completed date
+        try {
+            finished = jsonObj.getBoolean("completed_day_set");
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+        if (finished) {
+            try {
+                String completedDateString = jsonObj.getString("created_at");
+                SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+                completedDate = sdf.parse(completedDateString);
+            } catch (JSONException e) {
+                e.printStackTrace();
+            } catch (ParseException e) {
+                e.printStackTrace();
+            }
+            completed.setText((CharSequence) completedDate);
+        } else {
+            completed.setText(unFinished);
+        }
+
 
     }
 
