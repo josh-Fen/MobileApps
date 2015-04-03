@@ -1,5 +1,6 @@
 package edu.mobile.ravelryknit;
 
+import android.content.Context;
 import android.content.Intent;
 import android.support.v7.app.ActionBarActivity;
 import android.support.v7.app.ActionBar;
@@ -12,7 +13,9 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.os.Build;
+import android.widget.BaseAdapter;
 import android.widget.GridView;
+import android.widget.ImageView;
 
 import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpClient;
@@ -46,6 +49,39 @@ public class Main extends ActionBarActivity {
         Intent incomingIntent = getIntent();
         consumer = (OAuthConsumer) incomingIntent.getSerializableExtra("Consumer");
         currentUser = incomingIntent.getStringExtra("CurrentUser");
+
+        HttpGet request = new HttpGet("https://api.ravelry.com/projects/search.json?query=#craft=knitting&sort=recently-popular");
+        // sign the request
+        try {
+            consumer.sign(request);
+        } catch (OAuthMessageSignerException | OAuthExpectationFailedException | OAuthCommunicationException ex) {
+            Log.e(TAG, "OAuth Sign Exception", ex);
+        }
+
+        HttpResponse response = null;
+        // send the request
+        HttpClient httpClient = new DefaultHttpClient();
+        try {
+            response = httpClient.execute(request);
+        } catch (IOException ex) {
+            Log.e(TAG, "HTTP Client/IO Exception", ex);
+        }
+        //do stuff with the response
+        byte[] buffer = new byte[(int) response.getEntity().getContentLength()];
+        try {
+            response.getEntity().getContent().read(buffer);
+        } catch (IOException ex) {
+            Log.e(TAG, "HTTPResponse IO Exception", ex);
+        }
+        int statusCode = response.getStatusLine().getStatusCode();
+        Log.v(TAG, Integer.toString(statusCode));
+        String decoded = "";
+        try {
+            decoded = new String(buffer, "UTF-8");
+        } catch (UnsupportedEncodingException ex) {
+            Log.e(TAG, "UnsupportedEncodingException on buffer", ex);
+        }
+        Log.v(TAG,decoded);
 
         GridView gridview = (GridView) findViewById(R.id.gridView);
         gridview.setAdapter(new ImageAdapter(this));
@@ -89,17 +125,7 @@ public class Main extends ActionBarActivity {
 
         // references to our images
         private Integer[] mThumbIds = {
-                R.drawable.sample_2, R.drawable.sample_3,
-                R.drawable.sample_4, R.drawable.sample_5,
-                R.drawable.sample_6, R.drawable.sample_7,
-                R.drawable.sample_0, R.drawable.sample_1,
-                R.drawable.sample_2, R.drawable.sample_3,
-                R.drawable.sample_4, R.drawable.sample_5,
-                R.drawable.sample_6, R.drawable.sample_7,
-                R.drawable.sample_0, R.drawable.sample_1,
-                R.drawable.sample_2, R.drawable.sample_3,
-                R.drawable.sample_4, R.drawable.sample_5,
-                R.drawable.sample_6, R.drawable.sample_7
+
         };
     }
 
