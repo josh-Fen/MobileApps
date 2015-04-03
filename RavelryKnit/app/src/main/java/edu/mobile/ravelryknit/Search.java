@@ -13,7 +13,8 @@ public class Search extends ActionBarActivity {
     /*this button is for Josh to get something sent to display, you
     *can delete this when you actually program this activity, Tim
     * */
-    private Button mPlaceHolder;
+     public final static String EXTRA_INT = "edu.mobile.ravelryknit.MESSAGE";
+     private Button mPlaceHolder;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -33,6 +34,7 @@ public class Search extends ActionBarActivity {
 
     private void startDisplay(int send) {
         Intent intent = new Intent(this, Display.class);
+        intent.putExtra(EXTRA_INT, send);
         startActivity(intent);
     }
 
