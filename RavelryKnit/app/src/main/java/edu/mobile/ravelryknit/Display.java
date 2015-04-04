@@ -3,6 +3,7 @@ package edu.mobile.ravelryknit;
 import android.content.Intent;
 import android.support.v7.app.ActionBarActivity;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.TextView;
@@ -55,9 +56,18 @@ public class Display extends ActionBarActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_display);
 
+        user = (TextView) findViewById(R.id.displayUserView);
+        projectName = (TextView) findViewById(R.id.displayNameView);
+        craft = (TextView) findViewById(R.id.displayCraftView);
+        patternName = (TextView) findViewById(R.id.displayPatternView);
+        yarn = (TextView) findViewById(R.id.displayYarnView);
+        created = (TextView) findViewById(R.id.displayCreatedView);
+        completed = (TextView) findViewById(R.id.displayCompletedView);
+
         Intent intent = getIntent();
         try {
             jsonObj = new JSONObject(intent.getStringExtra("product"));
+            Log.d("Display", intent.getStringExtra("product"));
         } catch (JSONException e) {
             e.printStackTrace();
         }
@@ -65,7 +75,10 @@ public class Display extends ActionBarActivity {
         //getting username
         try {
             JSONObject userObject = jsonObj.getJSONObject("user");
-            username = userObject.getString("username");
+            String usernameHelper = userObject.getString("username");
+            if (usernameHelper != null){
+                username = usernameHelper;
+            }
         } catch (JSONException e) {
             e.printStackTrace();
         }
