@@ -35,6 +35,7 @@ import org.apache.http.params.HttpParams;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
+import org.json.JSONStringer;
 import org.json.JSONTokener;
 
 import java.io.BufferedReader;
@@ -98,6 +99,14 @@ public class Submit extends Activity implements OnItemSelectedListener, OnClickL
         }
 
         consumer = (OAuthConsumer) this.getIntent().getSerializableExtra("Consumer");
+        JSONObject userJSON = null;
+        try {
+            userJSON = new JSONObject((String) this.getIntent().getSerializableExtra("CurrentUser"));
+            username = userJSON.getJSONObject("user").getString("username");
+        } catch (JSONException e) {
+            Log.e(TAG, "JSON Exception making user JSON", e);
+        }
+
 
 
         //Project Name -- can't be blank
@@ -109,7 +118,7 @@ public class Submit extends Activity implements OnItemSelectedListener, OnClickL
         ArrayAdapter<CharSequence> craftAdapter = ArrayAdapter.createFromResource(this,
                 R.array.craft_array, android.R.layout.simple_spinner_item);
         // Specify the layout to use when the list of choices appears
-        craftAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        craftAdapter.setDropDownViewResource(R.layout.spinner_view);
         // Apply the adapter to the spinner
         projectCraft.setAdapter(craftAdapter);
         projectCraft.setOnItemSelectedListener(this);
@@ -124,30 +133,30 @@ public class Submit extends Activity implements OnItemSelectedListener, OnClickL
         //Notes
         projectNotes = (EditText) findViewById(R.id.project_notes);
 
-        //Yarn Name
-        projectYarn = (EditText) findViewById(R.id.project_yarn);
+//        //Yarn Name
+//        projectYarn = (EditText) findViewById(R.id.project_yarn);
+//
+//        //Yarn Color
+//        Spinner projectYarnColor = (Spinner) findViewById(R.id.project_yarn_color);
+//        // Create an ArrayAdapter using the string array and a default spinner layout
+//        ArrayAdapter<CharSequence> colorAdapter = ArrayAdapter.createFromResource(this,
+//                R.array.yarn_color_array, android.R.layout.simple_spinner_item);
+//        // Specify the layout to use when the list of choices appears
+//        colorAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+//        // Apply the adapter to the spinner
+//        projectYarnColor.setAdapter(colorAdapter);
+//        projectYarnColor.setOnItemSelectedListener(this);
 
-        //Yarn Color
-        Spinner projectYarnColor = (Spinner) findViewById(R.id.project_yarn_color);
-        // Create an ArrayAdapter using the string array and a default spinner layout
-        ArrayAdapter<CharSequence> colorAdapter = ArrayAdapter.createFromResource(this,
-                R.array.yarn_color_array, android.R.layout.simple_spinner_item);
-        // Specify the layout to use when the list of choices appears
-        colorAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-        // Apply the adapter to the spinner
-        projectYarnColor.setAdapter(colorAdapter);
-        projectYarnColor.setOnItemSelectedListener(this);
-
-        //Yarn Weight
-        Spinner projectYarnWeight = (Spinner) findViewById(R.id.project_yarn_weight);
-        // Create an ArrayAdapter using the string array and a default spinner layout
-        ArrayAdapter<CharSequence> weightAdapter = ArrayAdapter.createFromResource(this,
-                R.array.yarn_weight_array, android.R.layout.simple_spinner_item);
-        // Specify the layout to use when the list of choices appears
-        weightAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-        // Apply the adapter to the spinner
-        projectYarnWeight.setAdapter(weightAdapter);
-        projectYarnWeight.setOnItemSelectedListener(this);
+//        //Yarn Weight
+//        Spinner projectYarnWeight = (Spinner) findViewById(R.id.project_yarn_weight);
+//        // Create an ArrayAdapter using the string array and a default spinner layout
+//        ArrayAdapter<CharSequence> weightAdapter = ArrayAdapter.createFromResource(this,
+//                R.array.yarn_weight_array, android.R.layout.simple_spinner_item);
+//        // Specify the layout to use when the list of choices appears
+//        weightAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+//        // Apply the adapter to the spinner
+//        projectYarnWeight.setAdapter(weightAdapter);
+//        projectYarnWeight.setOnItemSelectedListener(this);
 
         //Submit
         Button submitButton = (Button) findViewById(R.id.project_submit);
@@ -158,6 +167,7 @@ public class Submit extends Activity implements OnItemSelectedListener, OnClickL
         switch (v.getId()){
             case R.id.project_picture:
                 takePicture();
+                break;
             case R.id.project_submit:
                 boolean complete = validateSubmission();
                 if(complete) {
@@ -165,6 +175,7 @@ public class Submit extends Activity implements OnItemSelectedListener, OnClickL
                 } else{
                     Toast.makeText(getApplicationContext(), R.string.fix_submit, Toast.LENGTH_SHORT).show();
                 }
+            break;
         }
     }
 
@@ -181,18 +192,22 @@ public class Submit extends Activity implements OnItemSelectedListener, OnClickL
 
     public void onItemSelected(AdapterView<?> parent, View view, int pos, long id) {
         // An item was selected in a spinner
-        switch (parent.getId()){
+        Spinner s = (Spinner) parent;
+        switch (s.getId()){
             case R.id.project_craft:
                 projectCraft = (String) parent.getItemAtPosition(pos);
-            case R.id.project_yarn_color:
-                yarnColor = (String) parent.getItemAtPosition(pos);
-            case R.id.project_yarn_weight:
-                yarnWeight = (String) parent.getItemAtPosition(pos);
+                break;
+//            case R.id.project_yarn_color:
+//                yarnColor = (String) parent.getItemAtPosition(pos);
+//                break;
+//            case R.id.project_yarn_weight:
+//                yarnWeight = (String) parent.getItemAtPosition(pos);
+//                break;
         }
     }
 
     public void onNothingSelected(AdapterView<?> parent) {
-        // Another interface callback -- I think blank is ok??
+
     }
 
     public void takePicture(){
@@ -208,8 +223,6 @@ public class Submit extends Activity implements OnItemSelectedListener, OnClickL
             }
             // Continue only if the File was successfully created
             if (photoFile != null) {
-                takePictureIntent.putExtra(MediaStore.EXTRA_OUTPUT,
-                        Uri.fromFile(photoFile));
                 startActivityForResult(takePictureIntent, REQUEST_IMAGE_CAPTURE);
             }
         }
@@ -227,66 +240,66 @@ public class Submit extends Activity implements OnItemSelectedListener, OnClickL
         JSONObject yarnObject = new JSONObject();
 
         //get values from EditText boxes
-        String yarnNameString = projectYarn.getText().toString();
+        //String yarnNameString = projectYarn.getText().toString();
         String patternNameString = projectPatternName.getText().toString();
         String projectNameString = projectName.getText().toString();
         String projectNotesString = projectNotes.getText().toString();
 
         //Make yarn JSON Object
-        try {
-            if(!yarnColor.equals("")){
-                //get yarn color array-- GET /color_families.json
-                HttpGet yarnColorGet = new HttpGet(urlBase + "/color_families.json");
-                HttpResponse yarnColorResponse = sendGet(yarnColorGet);
-                JSONObject yarnColorObject = getJSONObject(yarnColorResponse);
-                String yarnColorId = "";
-                try {
-                    JSONArray yarnColorArray = yarnColorObject.getJSONArray("color_families");
-                    for (int i = 0; i < yarnColorArray.length(); i++) {
-                        JSONObject obj = yarnColorArray.getJSONObject(i);
-                        if (obj.get("name").equals(yarnColor)) {
-                            yarnColorId = obj.getString("id");
-                        }
-                    }
-                } catch (JSONException e){
-                    Log.e(TAG, "JSON Exception at find yarn color id", e);
-                }
-                yarnObject.put("color_family_id", yarnColorId);
-
-            }
-            if(!yarnNameString.equals("")){
-                yarnObject.put("personal_name", yarnNameString);
-            }
-            if(!yarnWeight.equals("")){
-                //get yarn weight array -- GET /yarn_weights.json
-                HttpGet yarnWeightGet = new HttpGet(urlBase + "/yarn_weights.json");
-                HttpResponse yarnWeightResponse = sendGet(yarnWeightGet);
-                JSONObject yarnWeightObject = getJSONObject(yarnWeightResponse);
-                //TODO:remove later
-                Log.v(TAG, yarnWeightObject.toString());
-                //has id, name, ply, wpi
-                //Pattern to get just the name of the yarn weight
-                Pattern pattern = Pattern.compile("([A-Za-z])+(\\s([A-Za-z])+)*");
-                Matcher matcher = pattern.matcher(yarnWeight);
-                matcher.find();
-                String yarnWeightString = matcher.group();
-                String yarnWeightId = "";
-                try {
-                    JSONArray yarnWeightArray = yarnWeightObject.getJSONArray("yarn_weights");
-                    for (int i = 0; i < yarnWeightArray.length(); i++) {
-                        JSONObject obj = yarnWeightArray.getJSONObject(i);
-                        if (obj.get("name").equals(yarnWeightString)) {
-                            yarnWeightId = obj.getString("id");
-                        }
-                    }
-                } catch (JSONException e){
-                    Log.e(TAG, "JSON Exception at find yarn color id", e);
-                }
-                yarnObject.put("personal_yarn_weight_id", yarnWeightId);
-            }
-        } catch (JSONException e){
-            Log.e(TAG, "JSON Exception at creating yarn object", e);
-        }
+//        try {
+//            if(!yarnColor.equals("")){
+//                //get yarn color array-- GET /color_families.json
+//                HttpGet yarnColorGet = new HttpGet(urlBase + "/color_families.json");
+//                HttpResponse yarnColorResponse = sendGet(yarnColorGet);
+//                JSONObject yarnColorObject = getJSONObject(yarnColorResponse);
+//                String yarnColorId = "";
+//                try {
+//                    JSONArray yarnColorArray = yarnColorObject.getJSONArray("color_families");
+//                    for (int i = 0; i < yarnColorArray.length(); i++) {
+//                        JSONObject obj = yarnColorArray.getJSONObject(i);
+//                        if (obj.get("name").equals(yarnColor)) {
+//                            yarnColorId = obj.getString("id");
+//                        }
+//                    }
+//                } catch (JSONException e){
+//                    Log.e(TAG, "JSON Exception at find yarn color id", e);
+//                }
+//                yarnObject.put("color_family_id", yarnColorId);
+//
+//            }
+//            if(!yarnNameString.equals("")){
+//                yarnObject.put("personal_name", yarnNameString);
+//            }
+//            if(!yarnWeight.equals("")){
+//                //get yarn weight array -- GET /yarn_weights.json
+//                HttpGet yarnWeightGet = new HttpGet(urlBase + "/yarn_weights.json");
+//                HttpResponse yarnWeightResponse = sendGet(yarnWeightGet);
+//                JSONObject yarnWeightObject = getJSONObject(yarnWeightResponse);
+//                //TODO:remove later
+//                Log.v(TAG, yarnWeightObject.toString());
+//                //has id, name, ply, wpi
+//                //Pattern to get just the name of the yarn weight
+//                Pattern pattern = Pattern.compile("([A-Za-z])+(\\s([A-Za-z])+)*");
+//                Matcher matcher = pattern.matcher(yarnWeight);
+//                matcher.find();
+//                String yarnWeightString = matcher.group();
+//                String yarnWeightId = "";
+//                try {
+//                    JSONArray yarnWeightArray = yarnWeightObject.getJSONArray("yarn_weights");
+//                    for (int i = 0; i < yarnWeightArray.length(); i++) {
+//                        JSONObject obj = yarnWeightArray.getJSONObject(i);
+//                        if (obj.get("name").equals(yarnWeightString)) {
+//                            yarnWeightId = obj.getString("id");
+//                        }
+//                    }
+//                } catch (JSONException e){
+//                    Log.e(TAG, "JSON Exception at find yarn color id", e);
+//                }
+//                yarnObject.put("personal_yarn_weight_id", yarnWeightId);
+//            }
+//        } catch (JSONException e){
+//            Log.e(TAG, "JSON Exception at creating yarn object", e);
+//        }
 
         //Make project JSON Object
         try {
@@ -305,9 +318,9 @@ public class Submit extends Activity implements OnItemSelectedListener, OnClickL
 
                 String craftId = "";
                 try {
-                    JSONArray yarnColorArray = craftArrayObject.getJSONArray("crafts");
-                    for (int i = 0; i < yarnColorArray.length(); i++) {
-                        JSONObject obj = yarnColorArray.getJSONObject(i);
+                    JSONArray craftArray = craftArrayObject.getJSONArray("crafts");
+                    for (int i = 0; i < craftArray.length(); i++) {
+                        JSONObject obj = craftArray.getJSONObject(i);
                         if (obj.get("name").equals(projectCraft)) {
                             craftId = obj.getString("id");
                         }
@@ -327,7 +340,9 @@ public class Submit extends Activity implements OnItemSelectedListener, OnClickL
             projectObject.put("personal_pattern_name", patternNameString);
 
             //Yarn
-            projectObject.put("packs", yarnObject);
+//            if(yarnObject.length() > 0) {
+//                projectObject.put("packs", yarnObject);
+//            }
 
         } catch (JSONException e) {
             Log.e(TAG, "JSON Exception while creating project object", e);
@@ -345,16 +360,36 @@ public class Submit extends Activity implements OnItemSelectedListener, OnClickL
         }
         HttpResponse projectResponse = sendPost(projectPost);
         JSONObject completedProjectObject = getJSONObject(projectResponse);
+        int statusCode = projectResponse.getStatusLine().getStatusCode();
         //Get the project ID from the object in the response
         int projectId = 0;
         try {
-            projectId = completedProjectObject.getInt("id");
+            projectId = completedProjectObject.getJSONObject("project").getInt("id");
         } catch (JSONException e) {
             Log.e(TAG, "JSON Exception at get project ID", e);
         }
 
-        //add photo
+        if(statusCode==200) {
+                Toast.makeText(getApplicationContext(), "Success!", Toast.LENGTH_SHORT).show();
+            } else{
+                Toast.makeText(getApplicationContext(), "Something went wrong :(", Toast.LENGTH_SHORT).show();
+            }
 
+//        //add photo
+//        if(picture!=null) {
+//            addPictureToProject(Integer.toString(projectId));
+//        } else{
+//            if(statusCode==200) {
+//                Toast.makeText(getApplicationContext(), "Success!", Toast.LENGTH_SHORT).show();
+//            } else{
+//                Toast.makeText(getApplicationContext(), "Something went wrong :(", Toast.LENGTH_SHORT).show();
+//            }
+//        }
+
+
+    }
+
+    private void addPictureToProject(String projectId){
         //Get upload Token
         HttpPost requestTokenPost = new HttpPost(urlBase + "/upload/request_token.json");
         HttpResponse requestTokenResponse = sendPost(requestTokenPost);
@@ -376,7 +411,7 @@ public class Submit extends Activity implements OnItemSelectedListener, OnClickL
         } catch (UnsupportedEncodingException e) {
             Log.e(TAG, "Encoding Error with upload image post", e);
         }
-        HttpResponse uploadImageResponse = sendPost(projectPost);
+        HttpResponse uploadImageResponse = sendPost(uploadImagePost);
         //TODO:fix this
         JSONObject uploadImageResponseObject = (JSONObject) uploadImageResponse.getParams().getParameter("uploads");
         int imageId = 0;
