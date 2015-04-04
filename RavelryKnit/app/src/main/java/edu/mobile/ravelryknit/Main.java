@@ -2,6 +2,10 @@ package edu.mobile.ravelryknit;
 
 import android.content.Context;
 import android.content.Intent;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.graphics.drawable.Drawable;
+import android.os.AsyncTask;
 import android.support.v7.app.ActionBarActivity;
 import android.support.v7.app.ActionBar;
 import android.support.v4.app.Fragment;
@@ -13,6 +17,7 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.os.Build;
+import android.widget.AdapterView;
 import android.widget.BaseAdapter;
 import android.widget.GridView;
 import android.widget.ImageView;
@@ -21,10 +26,20 @@ import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.impl.client.DefaultHttpClient;
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
 
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.Serializable;
 import java.io.UnsupportedEncodingException;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.util.ArrayList;
+import java.util.List;
 
 import oauth.signpost.OAuthConsumer;
 import oauth.signpost.exception.OAuthCommunicationException;
@@ -36,66 +51,20 @@ public class Main extends ActionBarActivity {
     private static final String TAG = "Main";
     private OAuthConsumer consumer;
     private String currentUser;
-
-    @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
-        if (savedInstanceState == null) {
-            getSupportFragmentManager().beginTransaction()
-                    .add(R.id.container, new PlaceholderFragment())
-                    .commit();
-        }
-        Intent incomingIntent = getIntent();
-        consumer = (OAuthConsumer) incomingIntent.getSerializableExtra("Consumer");
-        currentUser = incomingIntent.getStringExtra("CurrentUser");
-
-        HttpGet request = new HttpGet("https://api.ravelry.com/projects/search.json?query=#craft=knitting&sort=recently-popular");
-        // sign the request
-        try {
-            consumer.sign(request);
-        } catch (OAuthMessageSignerException | OAuthExpectationFailedException | OAuthCommunicationException ex) {
-            Log.e(TAG, "OAuth Sign Exception", ex);
-        }
-
-        HttpResponse response = null;
-        // send the request
-        HttpClient httpClient = new DefaultHttpClient();
-        try {
-            response = httpClient.execute(request);
-        } catch (IOException ex) {
-            Log.e(TAG, "HTTP Client/IO Exception", ex);
-        }
-        //do stuff with the response
-        byte[] buffer = new byte[(int) response.getEntity().getContentLength()];
-        try {
-            response.getEntity().getContent().read(buffer);
-        } catch (IOException ex) {
-            Log.e(TAG, "HTTPResponse IO Exception", ex);
-        }
-        int statusCode = response.getStatusLine().getStatusCode();
-        Log.v(TAG, Integer.toString(statusCode));
-        String decoded = "";
-        try {
-            decoded = new String(buffer, "UTF-8");
-        } catch (UnsupportedEncodingException ex) {
-            Log.e(TAG, "UnsupportedEncodingException on buffer", ex);
-        }
-        Log.v(TAG,decoded);
-
-        GridView gridview = (GridView) findViewById(R.id.gridView);
-        gridview.setAdapter(new ImageAdapter(this));
-    }
+    private ArrayList<loadedImage> loadedImages;
 
     public class ImageAdapter extends BaseAdapter {
         private Context mContext;
 
-        public ImageAdapter(Context c) {
+        private ArrayList<loadedImage> mImages;
+
+        public ImageAdapter(Context c, ArrayList<loadedImage> loadedIs) {
             mContext = c;
+            mImages = loadedIs;
         }
 
         public int getCount() {
-            return mThumbIds.length;
+            return mImages.size();
         }
 
         public Object getItem(int position) {
@@ -111,22 +80,202 @@ public class Main extends ActionBarActivity {
             ImageView imageView;
             if (convertView == null) {
                 // if it's not recycled, initialize some attributes
-                imageView = new ImageView(mContext);
-                imageView.setLayoutParams(new GridView.LayoutParams(85, 85));
-                imageView.setScaleType(ImageView.ScaleType.CENTER_CROP);
+                imageView = new ImageView(Main.this);
                 imageView.setPadding(8, 8, 8, 8);
+                imageView.setScaleType(ImageView.ScaleType.FIT_CENTER);
             } else {
                 imageView = (ImageView) convertView;
             }
-
-            imageView.setImageResource(mThumbIds[position]);
+            imageView.setImageBitmap(mImages.get(position).getImage());
+            imageView.setTag(mImages.get(position).getTag());
             return imageView;
         }
+    }
 
-        // references to our images
-        private Integer[] mThumbIds = {
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_main);
 
-        };
+        Intent incomingIntent = getIntent();
+        consumer = (OAuthConsumer) incomingIntent.getSerializableExtra("Consumer");
+        currentUser = incomingIntent.getStringExtra("CurrentUser");
+
+        loadedImages = new ArrayList<loadedImage>();
+
+        HttpGet request = new HttpGet("https://api.ravelry.com/projects/search.json?craft=knitting&sort=best&page_size=12");
+        // sign the request
+        try {
+            consumer.sign(request);
+        } catch (OAuthMessageSignerException | OAuthExpectationFailedException | OAuthCommunicationException ex) {
+            Log.e(TAG, "OAuth Sign Exception", ex);
+        }
+
+        HttpResponse response = null;
+        // send the request
+        HttpClient httpClient = new DefaultHttpClient();
+        try {
+            response = httpClient.execute(request);
+        } catch (IOException ex) {
+            Log.e(TAG, "HTTP Client/IO Exception", ex);
+        }
+
+
+        //do stuff with the response
+        StringBuilder decoded = new StringBuilder();
+        InputStream content = null;
+        try {
+            content = response.getEntity().getContent();
+        } catch (IOException ex) {
+            Log.e(TAG, "HTTPResponse IO Exception", ex);
+        }
+        BufferedReader reader = new BufferedReader(new InputStreamReader(content));
+        String line;
+        try {
+            while((line = reader.readLine()) != null){
+                decoded.append(line);
+            }
+        } catch (IOException ex) {
+            Log.e(TAG, "HTTPResponse IO Exception", ex);
+        }
+
+        int statusCode = response.getStatusLine().getStatusCode();
+        Log.v(TAG, Integer.toString(statusCode));
+        JSONObject projectsResponse = null;
+        try {
+            projectsResponse = new JSONObject(decoded.toString());
+        } catch (JSONException ex) {
+            Log.e(TAG, "JSON Exception", ex);
+        }
+        JSONArray projects = null;
+        try {
+            projects = projectsResponse.getJSONArray("projects");
+        } catch (JSONException|NullPointerException ex) {
+            Log.e(TAG, "JSON Exception", ex);
+        }
+        for (int i = 0; i<projects.length(); i++) {
+            JSONObject project = null;
+            try {
+                project = projects.getJSONObject(i);
+            } catch (JSONException ex) {
+                Log.e(TAG, "JSON Exception", ex);
+            }
+            JSONObject firstPhoto = null;
+            try{
+                firstPhoto = project.getJSONObject("first_photo");
+            } catch (JSONException|NullPointerException ex) {
+                Log.e(TAG, "JSON Exception", ex);
+            }
+            loadedImage li = new loadedImage();
+            try {
+                li.setURL(firstPhoto.getString("medium_url"));
+            } catch (JSONException|NullPointerException ex) {
+                Log.e(TAG, "JSON Exception", ex);
+            }
+            try {
+                li.setTag(project.toString());
+            } catch (NullPointerException ex) {
+                Log.e(TAG, "Null Pointer Exception", ex);
+            }
+            loadedImages.add(li);
+        }
+
+
+
+        GridView gridview = (GridView) findViewById(R.id.gridView);
+        ImageAdapter imageAd = new ImageAdapter(this,loadedImages);
+        gridview.setAdapter(imageAd);
+
+        for (loadedImage li : loadedImages){
+            li.loadImage(imageAd);
+        }
+
+        gridview.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            public void onItemClick(AdapterView<?> parent, View v,
+                                    int position, long id) {
+                Intent launchDisplay = new Intent(Main.this, Display.class);
+                launchDisplay.putExtra("Consumer", consumer);
+                launchDisplay.putExtra("CurrentUser", (Serializable) currentUser);
+                String productTag = v.getTag().toString();
+                launchDisplay.putExtra("product", productTag);
+                startActivity(launchDisplay);
+            }
+        });
+
+    }
+    private class loadedImage {
+        private Bitmap image;
+
+        private ImageAdapter ia;
+
+        private String imgUrl;
+
+        private String tag;
+
+        public void setURL(String url) {
+            imgUrl = url;
+        }
+
+        public void setTag(String tagString) {
+            tag = tagString;
+        }
+
+        public String getTag() {
+            return tag;
+        }
+
+        public Bitmap getImage() {
+            return image;
+        }
+
+        public void loadImage(ImageAdapter imageA) {
+            this.ia = imageA;
+            if (imgUrl != null && !imgUrl.equals("")) {
+                new ImageLoadTask().execute(imgUrl);
+            }
+        }
+        private class ImageLoadTask extends AsyncTask<String, String, Bitmap> {
+
+            @Override
+            protected void onPreExecute() {
+                Log.v(TAG, "Loading image...");
+            }
+
+            // PARAM[0] IS IMG URL
+            protected Bitmap doInBackground(String... param) {
+                Log.v(TAG, "Attempting to load image URL: " + param[0]);
+                URL url = null;
+                try {
+                    url = new URL(param[0]);
+                } catch (MalformedURLException|NullPointerException ex) {
+                    Log.e(TAG, "Malformed URL Exception", ex);
+                }
+                try {
+                    Bitmap b = BitmapFactory.decodeStream(url.openConnection().getInputStream());
+                    return b;
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    return null;
+                }
+            }
+
+            protected void onProgressUpdate(String... progress) {
+                // NO OP
+            }
+
+            protected void onPostExecute(Bitmap ret) {
+                if (ret != null) {
+                    image = ret;
+                    if (ia != null) {
+                        // WHEN IMAGE IS LOADED NOTIFY THE ADAPTER
+                        ia.notifyDataSetChanged();
+                    }
+                } else {
+                    Log.e("ImageLoadTask", "Failed to load image");
+                }
+            }
+        }
+
     }
 
 
@@ -154,24 +303,5 @@ public class Main extends ActionBarActivity {
         }
 
         return super.onOptionsItemSelected(item);
-    }
-
-    /**
-     * A placeholder fragment containing a simple view.
-     */
-    public static class PlaceholderFragment extends Fragment {
-
-        public PlaceholderFragment() {
-        }
-
-        @Override
-        public View onCreateView(LayoutInflater inflater, ViewGroup container,
-                                 Bundle savedInstanceState) {
-            View rootView = inflater.inflate(R.layout.fragment_main, container, false);
-
-
-
-            return rootView;
-        }
     }
 }
