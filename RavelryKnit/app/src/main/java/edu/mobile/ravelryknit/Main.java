@@ -4,6 +4,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.Point;
 import android.graphics.drawable.Drawable;
 import android.os.AsyncTask;
 import android.support.v7.app.ActionBarActivity;
@@ -17,6 +18,7 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.os.Build;
+import android.view.WindowManager;
 import android.widget.AdapterView;
 import android.widget.BaseAdapter;
 import android.widget.GridView;
@@ -52,6 +54,8 @@ public class Main extends ActionBarActivity {
     private OAuthConsumer consumer;
     private String currentUser;
     private ArrayList<loadedImage> loadedImages;
+    private android.view.Display display;
+    private Point size;
 
     public class ImageAdapter extends BaseAdapter {
         private Context mContext;
@@ -80,9 +84,13 @@ public class Main extends ActionBarActivity {
             ImageView imageView;
             if (convertView == null) {
                 // if it's not recycled, initialize some attributes
+                size = new Point();
+                display.getSize(size);
+                int width = size.x;
                 imageView = new ImageView(Main.this);
-                imageView.setPadding(8, 8, 8, 8);
-                imageView.setScaleType(ImageView.ScaleType.FIT_CENTER);
+                imageView.setPadding(8, 0, 8, 0);
+                imageView.setScaleType(ImageView.ScaleType.CENTER_CROP);
+                imageView.setLayoutParams(new GridView.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, width/3));
             } else {
                 imageView = (ImageView) convertView;
             }
@@ -102,6 +110,7 @@ public class Main extends ActionBarActivity {
         currentUser = incomingIntent.getStringExtra("CurrentUser");
 
         loadedImages = new ArrayList<loadedImage>();
+        display = getWindowManager().getDefaultDisplay();
 
         HttpGet request = new HttpGet("https://api.ravelry.com/projects/search.json?craft=knitting&sort=best&page_size=12");
         // sign the request
