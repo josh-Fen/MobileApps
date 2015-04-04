@@ -2,6 +2,7 @@ package edu.mobile.ravelryknit;
 
 import android.app.Activity;
 import android.content.Intent;
+import android.graphics.Bitmap;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
@@ -13,6 +14,7 @@ import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ImageView;
 import android.widget.Spinner;
 import android.widget.AdapterView.OnItemSelectedListener;
 import android.view.View.OnClickListener;
@@ -33,14 +35,21 @@ import org.apache.http.params.HttpParams;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
+import org.json.JSONTokener;
+
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.io.UnsupportedEncodingException;
 import java.net.URI;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.Iterator;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import oauth.signpost.OAuthConsumer;
 import oauth.signpost.OAuthProvider;
@@ -62,7 +71,7 @@ public class Submit extends Activity implements OnItemSelectedListener, OnClickL
             "https://www.ravelry.com/oauth/access_token",
             "https://www.ravelry.com/oauth/authorize");
 
-    private OAuthConsumer consumer = new CommonsHttpOAuthConsumer(mConsumer.getToken(), mConsumer.getTokenSecret());
+    private OAuthConsumer consumer;
     private String apiAccessKey;
     private String urlBase = "https://api.ravelry.com";
     private String username;
@@ -87,6 +96,9 @@ public class Submit extends Activity implements OnItemSelectedListener, OnClickL
             StrictMode.ThreadPolicy policy = new StrictMode.ThreadPolicy.Builder().permitAll().build();
             StrictMode.setThreadPolicy(policy);
         }
+
+        consumer = (OAuthConsumer) this.getIntent().getSerializableExtra("Consumer");
+
 
         //Project Name -- can't be blank
         projectName = (EditText) findViewById(R.id.project_name);
@@ -161,7 +173,9 @@ public class Submit extends Activity implements OnItemSelectedListener, OnClickL
         //when an image is captured, get its uri
         if (requestCode == REQUEST_IMAGE_CAPTURE && resultCode == RESULT_OK) {
             Bundle extras = data.getExtras();
-            Uri pictureUri = (Uri) extras.get(MediaStore.EXTRA_OUTPUT);
+            Bitmap imageBitmap = (Bitmap) extras.get("data");
+            ImageView imageView = (ImageView) findViewById(R.id.project_image);
+            imageView.setImageBitmap(imageBitmap);
         }
     }
 
@@ -224,12 +238,21 @@ public class Submit extends Activity implements OnItemSelectedListener, OnClickL
                 //get yarn color array-- GET /color_families.json
                 HttpGet yarnColorGet = new HttpGet(urlBase + "/color_families.json");
                 HttpResponse yarnColorResponse = sendGet(yarnColorGet);
-                JSONArray yarnColorObject = (JSONArray) yarnColorResponse.getParams().getParameter("color_families");
-                //TODO:remove later
-                Log.v(TAG, yarnColorObject.toString());
-                //has color, id
-                //find yarn color id from array
-                yarnObject.put("color_family_id", "idAsString");
+                JSONObject yarnColorObject = getJSONObject(yarnColorResponse);
+                String yarnColorId = "";
+                try {
+                    JSONArray yarnColorArray = yarnColorObject.getJSONArray("color_families");
+                    for (int i = 0; i < yarnColorArray.length(); i++) {
+                        JSONObject obj = yarnColorArray.getJSONObject(i);
+                        if (obj.get("name").equals(yarnColor)) {
+                            yarnColorId = obj.getString("id");
+                        }
+                    }
+                } catch (JSONException e){
+                    Log.e(TAG, "JSON Exception at find yarn color id", e);
+                }
+                yarnObject.put("color_family_id", yarnColorId);
+
             }
             if(!yarnNameString.equals("")){
                 yarnObject.put("personal_name", yarnNameString);
@@ -238,11 +261,28 @@ public class Submit extends Activity implements OnItemSelectedListener, OnClickL
                 //get yarn weight array -- GET /yarn_weights.json
                 HttpGet yarnWeightGet = new HttpGet(urlBase + "/yarn_weights.json");
                 HttpResponse yarnWeightResponse = sendGet(yarnWeightGet);
-                JSONArray yarnWeightObject = (JSONArray) yarnWeightResponse.getParams().getParameter("yarn_weights");
+                JSONObject yarnWeightObject = getJSONObject(yarnWeightResponse);
                 //TODO:remove later
                 Log.v(TAG, yarnWeightObject.toString());
                 //has id, name, ply, wpi
-                yarnObject.put("personal_yarn_weight_id", "id-as-int");
+                //Pattern to get just the name of the yarn weight
+                Pattern pattern = Pattern.compile("([A-Za-z])+(\\s([A-Za-z])+)*");
+                Matcher matcher = pattern.matcher(yarnWeight);
+                matcher.find();
+                String yarnWeightString = matcher.group();
+                String yarnWeightId = "";
+                try {
+                    JSONArray yarnWeightArray = yarnWeightObject.getJSONArray("yarn_weights");
+                    for (int i = 0; i < yarnWeightArray.length(); i++) {
+                        JSONObject obj = yarnWeightArray.getJSONObject(i);
+                        if (obj.get("name").equals(yarnWeightString)) {
+                            yarnWeightId = obj.getString("id");
+                        }
+                    }
+                } catch (JSONException e){
+                    Log.e(TAG, "JSON Exception at find yarn color id", e);
+                }
+                yarnObject.put("personal_yarn_weight_id", yarnWeightId);
             }
         } catch (JSONException e){
             Log.e(TAG, "JSON Exception at creating yarn object", e);
@@ -258,11 +298,24 @@ public class Submit extends Activity implements OnItemSelectedListener, OnClickL
                 //get craft array -- POST /projects/crafts.json
                 HttpPost craftArrayPost = new HttpPost(urlBase + "/projects/crafts.json");
                 HttpResponse craftArrayResponse = sendPost(craftArrayPost);
-                JSONArray craftArrayObject = (JSONArray) craftArrayResponse.getParams().getParameter("crafts");
+                JSONObject craftArrayObject = getJSONObject(craftArrayResponse);
                 //TODO:remove later
-                Log.v(TAG, craftArrayObject.toString());
+                //Log.v(TAG, craftArrayObject.toString());
                 //find craft id from array - has id, name
-                projectObject.put("craft_id", "idAsInt");
+
+                String craftId = "";
+                try {
+                    JSONArray yarnColorArray = craftArrayObject.getJSONArray("crafts");
+                    for (int i = 0; i < yarnColorArray.length(); i++) {
+                        JSONObject obj = yarnColorArray.getJSONObject(i);
+                        if (obj.get("name").equals(projectCraft)) {
+                            craftId = obj.getString("id");
+                        }
+                    }
+                } catch (JSONException e){
+                    Log.e(TAG, "JSON Exception at find yarn color id", e);
+                }
+                projectObject.put("craft_id", craftId);
             }
 
             //Notes
@@ -284,14 +337,14 @@ public class Submit extends Activity implements OnItemSelectedListener, OnClickL
         HttpPost projectPost = new HttpPost(urlBase + "/projects/" + username + "/create.json");
         //add params to the post
         List<NameValuePair> projectParams = new ArrayList<NameValuePair>();
-        projectParams.add(new BasicNameValuePair("id", "12345"));
+        projectParams.add(new BasicNameValuePair("data", projectObject.toString()));
         try {
             projectPost.setEntity(new UrlEncodedFormEntity(projectParams));
         } catch (UnsupportedEncodingException e) {
             Log.e(TAG, "Encoding Error with project post", e);
         }
         HttpResponse projectResponse = sendPost(projectPost);
-        JSONObject completedProjectObject = (JSONObject) projectResponse.getParams().getParameter("project");
+        JSONObject completedProjectObject = getJSONObject(projectResponse);
         //Get the project ID from the object in the response
         int projectId = 0;
         try {
@@ -379,6 +432,24 @@ public class Submit extends Activity implements OnItemSelectedListener, OnClickL
             Log.e(TAG, "HTTP Client/IO Exception", ex);
         }
         return response;
+    }
+
+    private JSONObject getJSONObject(HttpResponse response){
+        String json = "";
+        try{
+            BufferedReader reader = new BufferedReader(new InputStreamReader(response.getEntity().getContent(), "UTF-8"));
+            json = reader.readLine();
+        } catch (IOException e){
+            Log.e(TAG, "IO Exception while reading HTTP response", e);
+        }
+        JSONTokener tokener = new JSONTokener(json);
+        JSONObject object = null;
+        try {
+            object = new JSONObject(tokener);
+        } catch (JSONException e) {
+            Log.e(TAG, "JSON Exception while reading HTTP response", e);
+        }
+        return object;
     }
 
     private File createImageFile() throws IOException {
