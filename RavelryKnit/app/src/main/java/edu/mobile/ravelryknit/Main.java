@@ -211,7 +211,12 @@ public class Main extends ActionBarActivity {
             }
         });
 
+
+
     }
+
+
+
     private class loadedImage {
         private Bitmap image;
 

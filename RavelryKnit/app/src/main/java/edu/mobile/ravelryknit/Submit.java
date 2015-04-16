@@ -43,6 +43,7 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.io.Serializable;
 import java.io.UnsupportedEncodingException;
 import java.net.URI;
 import java.text.SimpleDateFormat;
@@ -145,7 +146,7 @@ public class Submit extends Activity implements OnItemSelectedListener, OnClickL
         ArrayAdapter<CharSequence> colorAdapter = ArrayAdapter.createFromResource(this,
                 R.array.yarn_color_array, android.R.layout.simple_spinner_item);
         // Specify the layout to use when the list of choices appears
-        colorAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        colorAdapter.setDropDownViewResource(R.layout.spinner_view);
         // Apply the adapter to the spinner
         projectYarnColor.setAdapter(colorAdapter);
         projectYarnColor.setOnItemSelectedListener(this);
@@ -156,7 +157,7 @@ public class Submit extends Activity implements OnItemSelectedListener, OnClickL
         ArrayAdapter<CharSequence> weightAdapter = ArrayAdapter.createFromResource(this,
                 R.array.yarn_weight_array, android.R.layout.simple_spinner_item);
         // Specify the layout to use when the list of choices appears
-        weightAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        weightAdapter.setDropDownViewResource(R.layout.spinner_view);
         // Apply the adapter to the spinner
         projectYarnWeight.setAdapter(weightAdapter);
         projectYarnWeight.setOnItemSelectedListener(this);
@@ -381,6 +382,10 @@ public class Submit extends Activity implements OnItemSelectedListener, OnClickL
         } else{
             if(statusCode==200) {
                 Toast.makeText(getApplicationContext(), "Success!", Toast.LENGTH_SHORT).show();
+                Intent goHome = new Intent(Submit.this, Main.class);
+                goHome.putExtra("Consumer", consumer);
+                goHome.putExtra("CurrentUser", this.getIntent().getSerializableExtra("CurrentUser"));
+                startActivity(goHome);
             } else{
                 Toast.makeText(getApplicationContext(), "Something went wrong :(", Toast.LENGTH_SHORT).show();
             }
@@ -434,6 +439,10 @@ public class Submit extends Activity implements OnItemSelectedListener, OnClickL
         int statusCode = imageResponse.getStatusLine().getStatusCode();
         if(statusCode==200) {
             Toast.makeText(getApplicationContext(), "Success!", Toast.LENGTH_SHORT).show();
+            Intent goHome = new Intent(Submit.this, Main.class);
+            goHome.putExtra("Consumer", consumer);
+            goHome.putExtra("CurrentUser", this.getIntent().getSerializableExtra("CurrentUser"));
+            startActivity(goHome);
         } else{
             Toast.makeText(getApplicationContext(), "Something went wrong :(", Toast.LENGTH_SHORT).show();
         }
