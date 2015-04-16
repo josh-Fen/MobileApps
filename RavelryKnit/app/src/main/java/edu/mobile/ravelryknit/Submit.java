@@ -29,6 +29,7 @@ import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.ContentType;
 import org.apache.http.entity.mime.MultipartEntityBuilder;
+import org.apache.http.entity.mime.content.StringBody;
 import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.message.BasicNameValuePair;
 import org.apache.http.params.HttpParams;
@@ -107,6 +108,8 @@ public class Submit extends Activity implements OnItemSelectedListener, OnClickL
             Log.e(TAG, "JSON Exception making user JSON", e);
         }
 
+        apiAccessKey = consumer.getConsumerKey();
+
 
 
         //Project Name -- can't be blank
@@ -133,30 +136,30 @@ public class Submit extends Activity implements OnItemSelectedListener, OnClickL
         //Notes
         projectNotes = (EditText) findViewById(R.id.project_notes);
 
-//        //Yarn Name
-//        projectYarn = (EditText) findViewById(R.id.project_yarn);
-//
-//        //Yarn Color
-//        Spinner projectYarnColor = (Spinner) findViewById(R.id.project_yarn_color);
-//        // Create an ArrayAdapter using the string array and a default spinner layout
-//        ArrayAdapter<CharSequence> colorAdapter = ArrayAdapter.createFromResource(this,
-//                R.array.yarn_color_array, android.R.layout.simple_spinner_item);
-//        // Specify the layout to use when the list of choices appears
-//        colorAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-//        // Apply the adapter to the spinner
-//        projectYarnColor.setAdapter(colorAdapter);
-//        projectYarnColor.setOnItemSelectedListener(this);
+        //Yarn Name
+        projectYarn = (EditText) findViewById(R.id.project_yarn);
 
-//        //Yarn Weight
-//        Spinner projectYarnWeight = (Spinner) findViewById(R.id.project_yarn_weight);
-//        // Create an ArrayAdapter using the string array and a default spinner layout
-//        ArrayAdapter<CharSequence> weightAdapter = ArrayAdapter.createFromResource(this,
-//                R.array.yarn_weight_array, android.R.layout.simple_spinner_item);
-//        // Specify the layout to use when the list of choices appears
-//        weightAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-//        // Apply the adapter to the spinner
-//        projectYarnWeight.setAdapter(weightAdapter);
-//        projectYarnWeight.setOnItemSelectedListener(this);
+        //Yarn Color
+        Spinner projectYarnColor = (Spinner) findViewById(R.id.project_yarn_color);
+        // Create an ArrayAdapter using the string array and a default spinner layout
+        ArrayAdapter<CharSequence> colorAdapter = ArrayAdapter.createFromResource(this,
+                R.array.yarn_color_array, android.R.layout.simple_spinner_item);
+        // Specify the layout to use when the list of choices appears
+        colorAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        // Apply the adapter to the spinner
+        projectYarnColor.setAdapter(colorAdapter);
+        projectYarnColor.setOnItemSelectedListener(this);
+
+        //Yarn Weight
+        Spinner projectYarnWeight = (Spinner) findViewById(R.id.project_yarn_weight);
+        // Create an ArrayAdapter using the string array and a default spinner layout
+        ArrayAdapter<CharSequence> weightAdapter = ArrayAdapter.createFromResource(this,
+                R.array.yarn_weight_array, android.R.layout.simple_spinner_item);
+        // Specify the layout to use when the list of choices appears
+        weightAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        // Apply the adapter to the spinner
+        projectYarnWeight.setAdapter(weightAdapter);
+        projectYarnWeight.setOnItemSelectedListener(this);
 
         //Submit
         Button submitButton = (Button) findViewById(R.id.project_submit);
@@ -197,12 +200,12 @@ public class Submit extends Activity implements OnItemSelectedListener, OnClickL
             case R.id.project_craft:
                 projectCraft = (String) parent.getItemAtPosition(pos);
                 break;
-//            case R.id.project_yarn_color:
-//                yarnColor = (String) parent.getItemAtPosition(pos);
-//                break;
-//            case R.id.project_yarn_weight:
-//                yarnWeight = (String) parent.getItemAtPosition(pos);
-//                break;
+            case R.id.project_yarn_color:
+                yarnColor = (String) parent.getItemAtPosition(pos);
+                break;
+            case R.id.project_yarn_weight:
+                yarnWeight = (String) parent.getItemAtPosition(pos);
+                break;
         }
     }
 
@@ -244,62 +247,63 @@ public class Submit extends Activity implements OnItemSelectedListener, OnClickL
         String patternNameString = projectPatternName.getText().toString();
         String projectNameString = projectName.getText().toString();
         String projectNotesString = projectNotes.getText().toString();
+        String yarnNameString = projectYarn.getText().toString();
 
         //Make yarn JSON Object
-//        try {
-//            if(!yarnColor.equals("")){
-//                //get yarn color array-- GET /color_families.json
-//                HttpGet yarnColorGet = new HttpGet(urlBase + "/color_families.json");
-//                HttpResponse yarnColorResponse = sendGet(yarnColorGet);
-//                JSONObject yarnColorObject = getJSONObject(yarnColorResponse);
-//                String yarnColorId = "";
-//                try {
-//                    JSONArray yarnColorArray = yarnColorObject.getJSONArray("color_families");
-//                    for (int i = 0; i < yarnColorArray.length(); i++) {
-//                        JSONObject obj = yarnColorArray.getJSONObject(i);
-//                        if (obj.get("name").equals(yarnColor)) {
-//                            yarnColorId = obj.getString("id");
-//                        }
-//                    }
-//                } catch (JSONException e){
-//                    Log.e(TAG, "JSON Exception at find yarn color id", e);
-//                }
-//                yarnObject.put("color_family_id", yarnColorId);
-//
-//            }
-//            if(!yarnNameString.equals("")){
-//                yarnObject.put("personal_name", yarnNameString);
-//            }
-//            if(!yarnWeight.equals("")){
-//                //get yarn weight array -- GET /yarn_weights.json
-//                HttpGet yarnWeightGet = new HttpGet(urlBase + "/yarn_weights.json");
-//                HttpResponse yarnWeightResponse = sendGet(yarnWeightGet);
-//                JSONObject yarnWeightObject = getJSONObject(yarnWeightResponse);
-//                //TODO:remove later
-//                Log.v(TAG, yarnWeightObject.toString());
-//                //has id, name, ply, wpi
-//                //Pattern to get just the name of the yarn weight
-//                Pattern pattern = Pattern.compile("([A-Za-z])+(\\s([A-Za-z])+)*");
-//                Matcher matcher = pattern.matcher(yarnWeight);
-//                matcher.find();
-//                String yarnWeightString = matcher.group();
-//                String yarnWeightId = "";
-//                try {
-//                    JSONArray yarnWeightArray = yarnWeightObject.getJSONArray("yarn_weights");
-//                    for (int i = 0; i < yarnWeightArray.length(); i++) {
-//                        JSONObject obj = yarnWeightArray.getJSONObject(i);
-//                        if (obj.get("name").equals(yarnWeightString)) {
-//                            yarnWeightId = obj.getString("id");
-//                        }
-//                    }
-//                } catch (JSONException e){
-//                    Log.e(TAG, "JSON Exception at find yarn color id", e);
-//                }
-//                yarnObject.put("personal_yarn_weight_id", yarnWeightId);
-//            }
-//        } catch (JSONException e){
-//            Log.e(TAG, "JSON Exception at creating yarn object", e);
-//        }
+        try {
+            if(!yarnColor.equals("")){
+                //get yarn color array-- GET /color_families.json
+                HttpGet yarnColorGet = new HttpGet(urlBase + "/color_families.json");
+                HttpResponse yarnColorResponse = sendGet(yarnColorGet);
+                JSONObject yarnColorObject = getJSONObject(yarnColorResponse);
+                String yarnColorId = "";
+                try {
+                    JSONArray yarnColorArray = yarnColorObject.getJSONArray("color_families");
+                    for (int i = 0; i < yarnColorArray.length(); i++) {
+                        JSONObject obj = yarnColorArray.getJSONObject(i);
+                        if (obj.get("name").equals(yarnColor)) {
+                            yarnColorId = obj.getString("id");
+                        }
+                    }
+                } catch (JSONException e){
+                    Log.e(TAG, "JSON Exception at find yarn color id", e);
+                }
+                yarnObject.put("color_family_id", yarnColorId);
+
+            }
+            if(!yarnNameString.equals("")){
+                yarnObject.put("personal_name", yarnNameString);
+            }
+            if(!yarnWeight.equals("")){
+                //get yarn weight array -- GET /yarn_weights.json
+                HttpGet yarnWeightGet = new HttpGet(urlBase + "/yarn_weights.json");
+                HttpResponse yarnWeightResponse = sendGet(yarnWeightGet);
+                JSONObject yarnWeightObject = getJSONObject(yarnWeightResponse);
+                //TODO:remove later
+                Log.v(TAG, yarnWeightObject.toString());
+                //has id, name, ply, wpi
+                //Pattern to get just the name of the yarn weight
+                Pattern pattern = Pattern.compile("([A-Za-z])+(\\s([A-Za-z])+)*");
+                Matcher matcher = pattern.matcher(yarnWeight);
+                matcher.find();
+                String yarnWeightString = matcher.group();
+                String yarnWeightId = "";
+                try {
+                    JSONArray yarnWeightArray = yarnWeightObject.getJSONArray("yarn_weights");
+                    for (int i = 0; i < yarnWeightArray.length(); i++) {
+                        JSONObject obj = yarnWeightArray.getJSONObject(i);
+                        if (obj.get("name").equals(yarnWeightString)) {
+                            yarnWeightId = obj.getString("id");
+                        }
+                    }
+                } catch (JSONException e){
+                    Log.e(TAG, "JSON Exception at find yarn color id", e);
+                }
+                yarnObject.put("personal_yarn_weight_id", yarnWeightId);
+            }
+        } catch (JSONException e){
+            Log.e(TAG, "JSON Exception at creating yarn object", e);
+        }
 
         //Make project JSON Object
         try {
@@ -340,9 +344,11 @@ public class Submit extends Activity implements OnItemSelectedListener, OnClickL
             projectObject.put("personal_pattern_name", patternNameString);
 
             //Yarn
-//            if(yarnObject.length() > 0) {
-//                projectObject.put("packs", yarnObject);
-//            }
+            if(yarnObject.length() > 0) {
+                JSONArray packs = new JSONArray();
+                packs.put(yarnObject);
+                projectObject.put("packs", packs);
+            }
 
         } catch (JSONException e) {
             Log.e(TAG, "JSON Exception while creating project object", e);
@@ -369,22 +375,16 @@ public class Submit extends Activity implements OnItemSelectedListener, OnClickL
             Log.e(TAG, "JSON Exception at get project ID", e);
         }
 
-        if(statusCode==200) {
+        //add photo
+        if(picture!=null) {
+            addPictureToProject(Integer.toString(projectId));
+        } else{
+            if(statusCode==200) {
                 Toast.makeText(getApplicationContext(), "Success!", Toast.LENGTH_SHORT).show();
             } else{
                 Toast.makeText(getApplicationContext(), "Something went wrong :(", Toast.LENGTH_SHORT).show();
             }
-
-//        //add photo
-//        if(picture!=null) {
-//            addPictureToProject(Integer.toString(projectId));
-//        } else{
-//            if(statusCode==200) {
-//                Toast.makeText(getApplicationContext(), "Success!", Toast.LENGTH_SHORT).show();
-//            } else{
-//                Toast.makeText(getApplicationContext(), "Something went wrong :(", Toast.LENGTH_SHORT).show();
-//            }
-//        }
+        }
 
 
     }
@@ -393,30 +393,30 @@ public class Submit extends Activity implements OnItemSelectedListener, OnClickL
         //Get upload Token
         HttpPost requestTokenPost = new HttpPost(urlBase + "/upload/request_token.json");
         HttpResponse requestTokenResponse = sendPost(requestTokenPost);
-        String uploadToken = (String) requestTokenResponse.getParams().getParameter("upload_token");
+        String uploadToken = null;
+        try {
+            uploadToken = (String) getJSONObject(requestTokenResponse).get("upload_token");
+        } catch (JSONException e) {
+            Log.e(TAG, "JSON Exception reading upload token JSON", e);
+        }
 
         //Upload the image
         HttpPost uploadImagePost = new HttpPost(urlBase + "/upload/image.json");
         //create the multipart image
         MultipartEntityBuilder builder = MultipartEntityBuilder.create();
-        builder.addBinaryBody("file0", picture, ContentType.create("image/jpeg"), picture.getName());
+        builder.addBinaryBody("file0", picture);
+        //JSONObject imageJSON = new JSONObject();
+        builder.addTextBody("upload_token", uploadToken);
+        builder.addTextBody("access_key", apiAccessKey);
         HttpEntity multipart = builder.build(); //THIS IS AN ENTITY
-        //add params to the post
-        List<NameValuePair> uploadImageParams = new ArrayList<NameValuePair>();
-        uploadImageParams.add(new BasicNameValuePair("upload_token", uploadToken));//CANT ADD OTHER PARAMS TO IT? I THINK
-        uploadImageParams.add(new BasicNameValuePair("access_key", apiAccessKey));
-        uploadImageParams.add(new BasicNameValuePair("file0", "multipart.tostring???"));//CANT ADD IT TO PARAMS HERE
-        try {
-            uploadImagePost.setEntity(new UrlEncodedFormEntity(uploadImageParams));//PRETTY SURE YOU CANT HAVE TWO ENTITIES SET EITHER
-        } catch (UnsupportedEncodingException e) {
-            Log.e(TAG, "Encoding Error with upload image post", e);
-        }
+        uploadImagePost.setEntity(multipart);
         HttpResponse uploadImageResponse = sendPost(uploadImagePost);
-        //TODO:fix this
-        JSONObject uploadImageResponseObject = (JSONObject) uploadImageResponse.getParams().getParameter("uploads");
-        int imageId = 0;
+        JSONObject uploadImageResponseObject = getJSONObject(uploadImageResponse);
+        String imageId = "";
         try {
-            imageId = uploadImageResponseObject.getInt("image_id");
+            JSONObject uploads = uploadImageResponseObject.getJSONObject("uploads");
+            JSONObject file0 = uploads.getJSONObject("file0");
+            imageId = file0.getString("image_id");
         } catch (JSONException e) {
             Log.e(TAG, "JSON Exception with image ID", e);
         }
@@ -424,13 +424,19 @@ public class Submit extends Activity implements OnItemSelectedListener, OnClickL
         //Add the picture to the project
         HttpPost picturePost = new HttpPost(urlBase + "/projects/" + username + "/" + projectId + "/create_photo.json");
         List<NameValuePair> pictureParams = new ArrayList<NameValuePair>();
-        pictureParams.add(new BasicNameValuePair("image_id", Integer.toString(imageId)));
+        pictureParams.add(new BasicNameValuePair("image_id", imageId));
         try {
             picturePost.setEntity(new UrlEncodedFormEntity(pictureParams));
         } catch (UnsupportedEncodingException e) {
             Log.e(TAG, "Encoding Error with picture post", e);
         }
-        sendPost(picturePost);
+        HttpResponse imageResponse = sendPost(picturePost);
+        int statusCode = imageResponse.getStatusLine().getStatusCode();
+        if(statusCode==200) {
+            Toast.makeText(getApplicationContext(), "Success!", Toast.LENGTH_SHORT).show();
+        } else{
+            Toast.makeText(getApplicationContext(), "Something went wrong :(", Toast.LENGTH_SHORT).show();
+        }
     }
 
     private HttpResponse sendPost(HttpPost request){
