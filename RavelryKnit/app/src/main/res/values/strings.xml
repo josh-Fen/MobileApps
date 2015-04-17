@@ -6,10 +6,10 @@
     <string name="action_settings">Settings</string>
 
     <string name="submit_title">Submit a Project</string>
-    <string name="project_name">Project Name:</string>
+    <string name="project_name">Project Name*:</string>
     <string name="project_craft">Which Craft?</string>
     <string name="project_pattern_location">Where can people find the pattern that you used for this project?</string>
-    <string name="project_pattern_name">Name of pattern:</string>
+    <string name="project_pattern_name">Name of pattern*:</string>
     <string name="project_pattern_source_name">Pattern source (name of book, website, magazine)</string>
     <string name="project_picture">Add a picture of your project:</string>
     <string name="project_take_picture">Take Picture</string>

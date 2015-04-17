@@ -44,6 +44,8 @@ public class Display extends ActionBarActivity {
 
     JSONObject jsonObj;
 
+    private String currentUser;
+
 
 
     @Override
@@ -58,10 +60,10 @@ public class Display extends ActionBarActivity {
         yarn = (TextView) findViewById(R.id.displayYarnView);
         created = (TextView) findViewById(R.id.displayCreatedView);
         completed = (TextView) findViewById(R.id.displayCompletedView);
-
         Intent intent = getIntent();
         consumer = (OAuthConsumer) intent.getSerializableExtra("Consumer");
         currentUser = intent.getStringExtra("CurrentUser");
+
         try {
             jsonObj = new JSONObject(intent.getStringExtra("product"));
             Log.d("Display", intent.getStringExtra("product"));
@@ -174,6 +176,18 @@ public class Display extends ActionBarActivity {
             return true;
         }
 
-        return super.onOptionsItemSelected(item);
+        if (item.getItemId() == android.R.id.home) {
+            Intent result = new Intent((String) null);
+            super.onPause();
+            Intent intent = new Intent();
+            result.putExtra("Consumer", consumer);
+            result.putExtra("CurrentUser", currentUser);
+            setResult(RESULT_OK, intent);
+            finish();
+            return true;
+        }
+        else {
+            return super.onOptionsItemSelected(item);
+        }
     }
 }
