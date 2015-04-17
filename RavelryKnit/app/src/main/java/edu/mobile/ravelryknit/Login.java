@@ -3,6 +3,7 @@ package edu.mobile.ravelryknit;
 
 import android.app.Activity;
 import android.content.Intent;
+import android.graphics.Bitmap;
 import android.os.Bundle;
 import android.os.StrictMode;
 import android.util.Log;
@@ -73,13 +74,13 @@ public class Login extends Activity {
                         }
                         WebView webview = new WebView(Login.this);
                         setContentView(webview);
+                        webview.setLayerType(View.LAYER_TYPE_SOFTWARE, null);
                         webview.setWebViewClient(new WebViewClient() {
 
                             boolean authComplete = false;
 
                             @Override
-                            public void onPageFinished(WebView view, String url) {
-                                super.onPageFinished(view, url);
+                            public boolean shouldOverrideUrlLoading(WebView view, String url) {
                                 Uri callback = Uri.parse(url);
                                 if (callback.toString().startsWith("http://localhost/oauth_callback") && !authComplete) {
                                     authComplete = true;
@@ -91,47 +92,15 @@ public class Login extends Activity {
                                     }
                                     OAuthConsumer consumer = new CommonsHttpOAuthConsumer(mConsumer.getConsumerKey(), mConsumer.getConsumerSecret());
                                     consumer.setTokenWithSecret(mConsumer.getToken(), mConsumer.getTokenSecret());
-
-                                    HttpGet request = new HttpGet("https://api.ravelry.com/current_user.json");
-                                    // sign the request
-                                    try {
-                                        consumer.sign(request);
-                                    } catch (OAuthMessageSignerException | OAuthExpectationFailedException | OAuthCommunicationException ex) {
-                                        Log.e(TAG, "OAuth Sign Exception", ex);
-                                    }
-
-                                    HttpResponse response = null;
-                                    // send the request
-                                    HttpClient httpClient = new DefaultHttpClient();
-                                    try {
-                                        response = httpClient.execute(request);
-                                    } catch (IOException ex) {
-                                        Log.e(TAG, "HTTP Client/IO Exception", ex);
-                                    }
-                                    //do stuff with the response
-                                    byte[] buffer = new byte[(int) response.getEntity().getContentLength()];
-                                    try {
-                                        response.getEntity().getContent().read(buffer);
-                                    } catch (IOException ex) {
-                                        Log.e(TAG, "HTTPResponse IO Exception", ex);
-                                    }
-                                    int statusCode = response.getStatusLine().getStatusCode();
-                                    Log.v(TAG, Integer.toString(statusCode));
-                                    String decoded = "";
-                                    try {
-                                        decoded = new String(buffer, "UTF-8");
-                                    } catch (UnsupportedEncodingException ex) {
-                                        Log.e(TAG, "UnsupportedEncodingException on buffer", ex);
-                                    }
                                     Intent launchMain = new Intent(Login.this, Main.class);
                                     launchMain.putExtra("Consumer", consumer);
-                                    launchMain.putExtra("CurrentUser", decoded);
                                     startActivity(launchMain);
                                 } else if (url.contains("401")) {
                                     Log.v(TAG, "Access Denied by Ravelry OAuth");
                                     authComplete = false;
                                     setContentView(R.layout.activity_login);
                                 }
+                                return super.shouldOverrideUrlLoading(view, url);
                             }
                         });
                         webview.loadUrl(authUrl);
@@ -159,13 +128,13 @@ public class Login extends Activity {
                         }
                         WebView webview = new WebView(Login.this);
                         setContentView(webview);
+                        webview.setLayerType(View.LAYER_TYPE_SOFTWARE, null);
                         webview.setWebViewClient(new WebViewClient() {
 
                             boolean authComplete = false;
 
                             @Override
-                            public void onPageFinished(WebView view, String url) {
-                                super.onPageFinished(view, url);
+                            public boolean shouldOverrideUrlLoading(WebView view, String url) {
                                 Uri callback = Uri.parse(url);
                                 if (callback.toString().startsWith("http://localhost/oauth_callback") && !authComplete) {
                                     authComplete = true;
@@ -177,47 +146,15 @@ public class Login extends Activity {
                                     }
                                     OAuthConsumer consumer = new CommonsHttpOAuthConsumer(mConsumer.getConsumerKey(),mConsumer.getConsumerSecret());
                                     consumer.setTokenWithSecret(mConsumer.getToken(), mConsumer.getTokenSecret());
-
-                                    HttpGet request = new HttpGet("https://api.ravelry.com/current_user.json");
-                                    // sign the request
-                                    try {
-                                        consumer.sign(request);
-                                    } catch (OAuthMessageSignerException | OAuthExpectationFailedException | OAuthCommunicationException ex) {
-                                        Log.e(TAG, "OAuth Sign Exception", ex);
-                                    }
-
-                                    HttpResponse response = null;
-                                    // send the request
-                                    HttpClient httpClient = new DefaultHttpClient();
-                                    try {
-                                        response = httpClient.execute(request);
-                                    } catch (IOException ex) {
-                                        Log.e(TAG, "HTTP Client/IO Exception", ex);
-                                    }
-                                    //do stuff with the response
-                                    byte[] buffer = new byte[(int) response.getEntity().getContentLength()];
-                                    try {
-                                        response.getEntity().getContent().read(buffer);
-                                    } catch (IOException ex) {
-                                        Log.e(TAG, "HTTPResponse IO Exception", ex);
-                                    }
-                                    int statusCode = response.getStatusLine().getStatusCode();
-                                    Log.v(TAG, Integer.toString(statusCode));
-                                    String decoded = "";
-                                    try {
-                                        decoded = new String(buffer, "UTF-8");
-                                    } catch (UnsupportedEncodingException ex) {
-                                        Log.e(TAG, "UnsupportedEncodingException on buffer", ex);
-                                    }
                                     Intent launchMain = new Intent(Login.this, Main.class);
                                     launchMain.putExtra("Consumer", consumer);
-                                    launchMain.putExtra("CurrentUser", decoded);
                                     startActivity(launchMain);
                                 } else if (url.contains("401")) {
                                     Log.v(TAG, "Access Denied by Ravelry OAuth");
                                     authComplete = false;
                                     setContentView(R.layout.activity_login);
                                 }
+                                return super.shouldOverrideUrlLoading(view, url);
                             }
                         });
                         webview.loadUrl(authUrl);

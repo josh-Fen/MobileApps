@@ -12,22 +12,17 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.Serializable;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
 import oauth.signpost.OAuthConsumer;
-import oauth.signpost.OAuthProvider;
-import oauth.signpost.commonshttp.CommonsHttpOAuthConsumer;
-import oauth.signpost.commonshttp.CommonsHttpOAuthProvider;
 
 
 public class Display extends ActionBarActivity {
-    private OAuthConsumer mConsumer = new CommonsHttpOAuthConsumer("B53DF0B7F0AAB1AC65C4", "pYx+Ks/8up8wVVWgov2AsR7HSym89hWbNLclIzrJ");
-    private OAuthProvider mProvider = new CommonsHttpOAuthProvider(
-            "https://www.ravelry.com/oauth/request_token",
-            "https://www.ravelry.com/oauth/access_token",
-            "https://www.ravelry.com/oauth/authorize");
+    private OAuthConsumer consumer;
+    private String currentUser;
 
     private TextView user;
     private TextView projectName;
@@ -65,6 +60,8 @@ public class Display extends ActionBarActivity {
         completed = (TextView) findViewById(R.id.displayCompletedView);
 
         Intent intent = getIntent();
+        consumer = (OAuthConsumer) intent.getSerializableExtra("Consumer");
+        currentUser = intent.getStringExtra("CurrentUser");
         try {
             jsonObj = new JSONObject(intent.getStringExtra("product"));
             Log.d("Display", intent.getStringExtra("product"));
@@ -169,8 +166,11 @@ public class Display extends ActionBarActivity {
         // as you specify a parent activity in AndroidManifest.xml.
         int id = item.getItemId();
 
-        //noinspection SimplifiableIfStatement
-        if (id == R.id.action_settings) {
+        if (id == R.id.action_submit) {
+            Intent launchSubmit = new Intent(Display.this, Submit.class);
+            launchSubmit.putExtra("Consumer", consumer);
+            launchSubmit.putExtra("CurrentUser", (Serializable) currentUser);
+            startActivity(launchSubmit);
             return true;
         }
 

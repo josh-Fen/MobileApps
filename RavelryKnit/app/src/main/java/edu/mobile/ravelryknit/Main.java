@@ -87,7 +87,7 @@ public class Main extends ActionBarActivity {
                 size = new Point();
                 display.getSize(size);
                 int width = size.x;
-                imageView = new ImageView(Main.this);
+                imageView = new ImageView(mContext);
                 imageView.setPadding(8, 0, 8, 0);
                 imageView.setScaleType(ImageView.ScaleType.CENTER_CROP);
                 imageView.setLayoutParams(new GridView.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, width/3));
@@ -107,12 +107,11 @@ public class Main extends ActionBarActivity {
 
         Intent incomingIntent = getIntent();
         consumer = (OAuthConsumer) incomingIntent.getSerializableExtra("Consumer");
-        currentUser = incomingIntent.getStringExtra("CurrentUser");
 
         loadedImages = new ArrayList<loadedImage>();
         display = getWindowManager().getDefaultDisplay();
 
-        HttpGet request = new HttpGet("https://api.ravelry.com/projects/search.json?craft=knitting&sort=best&page_size=12");
+        HttpGet request = new HttpGet("https://api.ravelry.com/current_user.json");
         // sign the request
         try {
             consumer.sign(request);
@@ -128,8 +127,6 @@ public class Main extends ActionBarActivity {
         } catch (IOException ex) {
             Log.e(TAG, "HTTP Client/IO Exception", ex);
         }
-
-
         //do stuff with the response
         StringBuilder decoded = new StringBuilder();
         InputStream content = null;
@@ -150,9 +147,49 @@ public class Main extends ActionBarActivity {
 
         int statusCode = response.getStatusLine().getStatusCode();
         Log.v(TAG, Integer.toString(statusCode));
+        currentUser = decoded.toString();
+
+        HttpGet request2 = new HttpGet("https://api.ravelry.com/projects/search.json?craft=knitting&sort=best&page_size=12");
+        // sign the request
+        try {
+            consumer.sign(request2);
+        } catch (OAuthMessageSignerException | OAuthExpectationFailedException | OAuthCommunicationException ex) {
+            Log.e(TAG, "OAuth Sign Exception", ex);
+        }
+
+        HttpResponse response2 = null;
+        // send the request
+        HttpClient httpClient2 = new DefaultHttpClient();
+        try {
+            response2 = httpClient2.execute(request2);
+        } catch (IOException ex) {
+            Log.e(TAG, "HTTP Client/IO Exception", ex);
+        }
+
+
+        //do stuff with the response
+        StringBuilder decoded2 = new StringBuilder();
+        InputStream content2 = null;
+        try {
+            content2 = response2.getEntity().getContent();
+        } catch (IOException ex) {
+            Log.e(TAG, "HTTPResponse IO Exception", ex);
+        }
+        BufferedReader reader2 = new BufferedReader(new InputStreamReader(content2));
+        String line2;
+        try {
+            while((line2 = reader2.readLine()) != null){
+                decoded2.append(line2);
+            }
+        } catch (IOException ex) {
+            Log.e(TAG, "HTTPResponse IO Exception", ex);
+        }
+
+        int statusCode2 = response2.getStatusLine().getStatusCode();
+        Log.v(TAG, Integer.toString(statusCode2));
         JSONObject projectsResponse = null;
         try {
-            projectsResponse = new JSONObject(decoded.toString());
+            projectsResponse = new JSONObject(decoded2.toString());
         } catch (JSONException ex) {
             Log.e(TAG, "JSON Exception", ex);
         }
@@ -177,7 +214,7 @@ public class Main extends ActionBarActivity {
             }
             loadedImage li = new loadedImage();
             try {
-                li.setURL(firstPhoto.getString("medium_url"));
+                li.setURL(firstPhoto.getString("small_url"));
             } catch (JSONException|NullPointerException ex) {
                 Log.e(TAG, "JSON Exception", ex);
             }
@@ -188,8 +225,6 @@ public class Main extends ActionBarActivity {
             }
             loadedImages.add(li);
         }
-
-
 
         GridView gridview = (GridView) findViewById(R.id.gridView);
         ImageAdapter imageAd = new ImageAdapter(this,loadedImages);
