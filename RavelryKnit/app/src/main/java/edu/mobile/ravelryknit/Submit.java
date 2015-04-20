@@ -3,23 +3,23 @@ package edu.mobile.ravelryknit;
 import android.app.Activity;
 import android.content.Intent;
 import android.graphics.Bitmap;
-import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
 import android.os.StrictMode;
 import android.provider.MediaStore;
 import android.util.Log;
 import android.view.View;
+import android.view.View.OnClickListener;
 import android.widget.AdapterView;
+import android.widget.AdapterView.OnItemSelectedListener;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.Spinner;
-import android.widget.AdapterView.OnItemSelectedListener;
-import android.view.View.OnClickListener;
 import android.widget.Toast;
 
+import org.apache.commons.io.IOUtils;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
 import org.apache.http.NameValuePair;
@@ -27,29 +27,29 @@ import org.apache.http.client.HttpClient;
 import org.apache.http.client.entity.UrlEncodedFormEntity;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
-import org.apache.http.entity.ContentType;
+import org.apache.http.entity.mime.HttpMultipartMode;
 import org.apache.http.entity.mime.MultipartEntityBuilder;
-import org.apache.http.entity.mime.content.StringBody;
+import org.apache.http.entity.mime.content.FileBody;
+import org.apache.http.entity.mime.content.InputStreamBody;
 import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.message.BasicNameValuePair;
-import org.apache.http.params.HttpParams;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
-import org.json.JSONStringer;
 import org.json.JSONTokener;
 
 import java.io.BufferedReader;
+import java.io.ByteArrayInputStream;
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.io.Serializable;
 import java.io.UnsupportedEncodingException;
-import java.net.URI;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
-import java.util.Iterator;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -61,6 +61,8 @@ import oauth.signpost.commonshttp.CommonsHttpOAuthProvider;
 import oauth.signpost.exception.OAuthCommunicationException;
 import oauth.signpost.exception.OAuthExpectationFailedException;
 import oauth.signpost.exception.OAuthMessageSignerException;
+
+import org.apache.commons.io.IOUtils;
 
 /**
  * Created by Kaitlyn on 3/31/2015.
@@ -93,6 +95,9 @@ public class Submit extends Activity implements OnItemSelectedListener, OnClickL
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+
+
         setContentView(R.layout.activity_submit);
         Log.v(TAG, "onCreate");
         if (android.os.Build.VERSION.SDK_INT > 9) {
@@ -165,6 +170,7 @@ public class Submit extends Activity implements OnItemSelectedListener, OnClickL
         //Submit
         Button submitButton = (Button) findViewById(R.id.project_submit);
         submitButton.setOnClickListener(this);
+
     }
 
     public void onClick(View v){
@@ -409,6 +415,20 @@ public class Submit extends Activity implements OnItemSelectedListener, OnClickL
         HttpPost uploadImagePost = new HttpPost(urlBase + "/upload/image.json");
         //create the multipart image
         MultipartEntityBuilder builder = MultipartEntityBuilder.create();
+//        InputStream inputStream = null;
+//        try {
+//            inputStream = new FileInputStream(picture);
+//        } catch (FileNotFoundException e) {
+//            Log.e(TAG, "Picture file not found", e);
+//        }
+//        byte[] data = null;
+//        try{
+//            data = IOUtils.toByteArray(inputStream);
+//        }catch (IOException e){
+//            Log.e(TAG, "IO exception reading picture file", e);
+//        }
+        //InputStreamBody inputStreamBody = new InputStreamBody(new ByteArrayInputStream(data), "Pic.jpg");
+        //builder.setMode(HttpMultipartMode.BROWSER_COMPATIBLE);
         builder.addBinaryBody("file0", picture);
         //JSONObject imageJSON = new JSONObject();
         builder.addTextBody("upload_token", uploadToken);
@@ -436,6 +456,23 @@ public class Submit extends Activity implements OnItemSelectedListener, OnClickL
             Log.e(TAG, "Encoding Error with picture post", e);
         }
         HttpResponse imageResponse = sendPost(picturePost);
+        JSONObject imageResponseObject = getJSONObject(imageResponse);
+        String statusToken = "";
+        try{
+            statusToken = imageResponseObject.getString("status_token");
+        } catch (JSONException e){
+            Log.e(TAG, "JSON Exception with image response", e);
+        }
+        Log.v(TAG, "status token: " + statusToken);
+
+        //Check status
+//        HttpGet getStatus = new HttpGet(urlBase + "/photos/status.json");
+//        List<NameValuePair> statusParams = new ArrayList<NameValuePair>();
+//        statusParams.add(new BasicNameValuePair("status_token", statusToken));
+//        HttpResponse statusResponse = sendGet(getStatus);
+//        JSONObject statusObject = getJSONObject(statusResponse);
+
+
         int statusCode = imageResponse.getStatusLine().getStatusCode();
         if(statusCode==200) {
             Toast.makeText(getApplicationContext(), "Success!", Toast.LENGTH_SHORT).show();
