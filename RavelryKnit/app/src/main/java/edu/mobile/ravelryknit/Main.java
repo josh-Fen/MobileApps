@@ -149,7 +149,7 @@ public class Main extends ActionBarActivity {
         Log.v(TAG, Integer.toString(statusCode));
         currentUser = decoded.toString();
 
-        HttpGet request2 = new HttpGet("https://api.ravelry.com/projects/search.json?craft=knitting&sort=best&page_size=12");
+        HttpGet request2 = new HttpGet("https://api.ravelry.com/projects/search.json?craft=knitting&sort=best&page_size=15");
         // sign the request
         try {
             consumer.sign(request2);

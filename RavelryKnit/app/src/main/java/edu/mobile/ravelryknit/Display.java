@@ -44,10 +44,6 @@ public class Display extends ActionBarActivity {
 
     JSONObject jsonObj;
 
-    private String currentUser;
-
-
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);

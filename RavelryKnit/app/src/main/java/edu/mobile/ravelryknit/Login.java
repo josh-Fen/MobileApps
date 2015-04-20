@@ -163,4 +163,43 @@ public class Login extends Activity {
                 }
         });
     }
+
+   /* protected void loadProviderConsumer()
+    {
+        try {
+            fin = this.openFileInput("tmp_consumer.dat");
+            ois = new ObjectInputStream(fin);
+            consumer = (CommonsHttpOAuthConsumer) ois.readObject();
+            ois.close();
+            fin.close();
+
+            Log.v(TAG, "Loaded state");
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        } catch (StreamCorruptedException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        } catch (ClassNotFoundException e) {
+            e.printStackTrace();
+        }
+    }
+
+    protected void persistProviderConsumer()
+    {
+
+        try {
+            fout = this.openFileOutput("tmp_consumer.dat", MODE_PRIVATE);
+            oos = new ObjectOutputStream(fout);
+            oos.writeObject(consumer);
+            oos.close();
+            fout.close();
+
+            Log.v(TAG, "Saved state");
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }*/
 }
