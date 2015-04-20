@@ -44,8 +44,6 @@ public class Display extends ActionBarActivity {
 
     JSONObject jsonObj;
 
-    private String currentUser;
-
 
 
     @Override
