@@ -35,6 +35,7 @@ public class TestRavelry extends ActivityInstrumentationTestCase2<Login> {
         solo.clickOnWebElement(By.tagName("button"));
         solo.assertCurrentActivity("Main", Main.class);
         solo.clickOnView(solo.getView(R.id.gridView));
+        solo.assertCurrentActivity("Display", Display.class);
     }
 
     public void testDisplay(){
@@ -43,6 +44,9 @@ public class TestRavelry extends ActivityInstrumentationTestCase2<Login> {
         solo.clickOnWebElement(By.tagName("button"));
         solo.assertCurrentActivity("Main", Main.class);
         solo.clickOnView(solo.getView(R.id.gridView));
+        solo.assertCurrentActivity("Display", Display.class);
+        solo.goBack();
+        solo.assertCurrentActivity("Main", Main.class);
     }
 
     public void testSubmit(){
