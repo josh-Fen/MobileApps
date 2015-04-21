@@ -37,6 +37,14 @@ public class TestRavelry extends ActivityInstrumentationTestCase2<Login> {
         solo.clickOnView(solo.getView(R.id.gridView));
     }
 
+    public void testDisplay(){
+        solo.assertCurrentActivity("Login", Login.class);
+        solo.clickOnButton(0);
+        solo.clickOnWebElement(By.tagName("button"));
+        solo.assertCurrentActivity("Main", Main.class);
+        solo.clickOnView(solo.getView(R.id.gridView));
+    }
+
     public void testSubmit(){
         solo.assertCurrentActivity("Login", Login.class);
         solo.clickOnButton(0);
